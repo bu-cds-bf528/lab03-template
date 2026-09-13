@@ -9,9 +9,6 @@ and choose a single gene's coordinates from the GFF created, make
 a FASTA index of the genome, and extract out the genomic sequence
 of the chosen gene. 
 
-We will then use a jupyter notebook to generate a quick visualization
-of the gene annotations in the form of a circos plot.
-
 Practically, you will read a specification document of the pipeline
 and then connect all the processes together in the `main.nf`. This
 lab will expose you to a number of concepts and aspects of nextflow
@@ -46,10 +43,7 @@ A quick index of everything this lab introduces, and where to find it below.
 - `resume` in `nextflow.config` — see "Resume"
 - Process `label`s and resource requests in `nextflow.config` — see "Labels"
 - `nextflow lint` — see "Linting, formatting, and inspecting pipelines"
-- `results` - Learn how you can use the `results` directory to store your results outside of the `work` directory
-
-**Analysis**
-- Jupyter notebooks, conda environments for analysis, circos plots (`pyCirclize`) — see "Lab 03 Tasks - Jupyter Notebooks (Together)"
+- `results` directory, `publish:` block — see "Results - moving important files outside of the work directory"
 
 ## Small aside - FASTA format
 
