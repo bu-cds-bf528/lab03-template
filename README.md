@@ -304,6 +304,8 @@ create the right outputs for you to quickly troubleshoot your workflow.
 
 ## Running your pipeline for real
 
+[Advanced SCC Usage](https://bu-bioinfo.github.io/bf528/lectures/week-03/)
+
 Once you've confirmed that your pipeline works with a stub run, you should see
 all of your processes finish. Check to make sure that the appropriate number
 of processes run based on how many samples are in your `samplesheet.csv`. 
@@ -313,6 +315,12 @@ Once you have, run the following command to run your pipeline for real:
 ```bash
 nextflow run main.nf -profile conda,cluster
 ```
+
+Feel free to run `qstat -u <your-username>` during this time. You can see
+all your different jobs run on compute nodes as the workflow progresses.
+
+You can also use `qstat -j <job-id-from-qstat>` to see more details about your
+job.
 
 ## Process configuration: ext.args and withName
 
