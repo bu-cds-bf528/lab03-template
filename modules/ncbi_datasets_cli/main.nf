@@ -19,7 +19,7 @@ process NCBI_DATASETS_CLI {
     output:
     record(
         name: request.name,
-        fna: file('dataset/**/*.fna')
+        fna: file("dataset/**/*.fna")
     )
 
     script:

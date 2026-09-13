@@ -260,14 +260,16 @@ order:
 Each script will print out what each step on lines 20-22 produces. Observe
 how they connect and what the final channel resembles. 
 
-This is the main task. You need to:
+Once done, please do the following main tasks:
 
 - [ ] **Ensure you understand the initial channel generation**, Look at the 
    provided lines in the main.nf from lines 20-22. Run the provided
    `frompath.nf`, `splitcsv.nf`, and `map.nf` test scripts
    to see what these lines will produce.
-- [ ] **Call each process**, wiring each one's output to the next process's
-   input, per `specifications.md` > Pipeline steps.
+- [ ] **In the main.nf, call each process**, wiring each one's output to the
+  next process's input, per `specifications.md` > Pipeline steps. Remember to 
+  save the output of a process to a named variable and use that to pass the outputs
+  to the next process.
 
 
 ## Stub runs (-stub)

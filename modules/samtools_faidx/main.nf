@@ -19,7 +19,10 @@ process SAMTOOLS_FAIDX {
     // TODO: declare input: (a Genome record, named `sample` — see the
     // script below) and output: (build an IndexedGenome record — see
     // SPEC.md > Pipeline steps). `fna` is just passed through from the
-    // input; `fai` is produced by the command below.
+    // input; `fai` is produced by the command below. 
+
+    // Hint: You can use the * in bash to capture any file ending in a certain
+    // pattern. The index will end in ".fna"
 
 
     shell:

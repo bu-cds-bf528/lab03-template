@@ -23,10 +23,14 @@ workflow {
 
     // TODO: wire up NCBI_DATASETS_CLI, PROKKA, EXTRACT_REGION,
     // SAMTOOLS_FAIDX, and SAMTOOLS_FAIDX_SUBSET per SPEC.md > Pipeline steps.
-    // Two branches need to be recombined before the last step.
 
     // TODO: Ensure you save the PROKKA outputs to `annot_ch`
+    // TODO: Ensure you save the EXTRACT_REGION outputs to `region_ch`
+    // TODO: Ensure you save the SAMTOOLS_FAIDX outputs to `faidx_ch`
 
+    // GIVEN: We will talk in more detail later about what this is doing
+    subset_ch = faidx_ch.join(region_ch, by: "name")
+    faidx_out_ch = SAMTOOLS_FAIDX_SUBSET(subset_ch)
 
     publish:
     prokka_results = annot_ch
