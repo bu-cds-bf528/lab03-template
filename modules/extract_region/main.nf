@@ -22,7 +22,7 @@ process EXTRACT_REGION {
     output:
     record(
         name: sample.name,
-        region: file('region_of_interest.txt')
+        region: file("{sample.name}_region_of_interest.txt")
     )
 
     script:
@@ -35,7 +35,7 @@ process EXTRACT_REGION {
 
     stub:
     """
-    touch region_of_interest.txt
+    touch ${sample.name}_region_of_interest.txt
     """
 
 }

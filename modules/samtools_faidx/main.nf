@@ -29,6 +29,6 @@ process SAMTOOLS_FAIDX {
 
     stub:
     """
-    touch stub.fai
+    touch ${sample.name}.stub.fai
     """
 }

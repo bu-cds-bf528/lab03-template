@@ -31,7 +31,7 @@ process NCBI_DATASETS_CLI {
     stub:
     """
     mkdir -p dataset/stub/
-    touch dataset/stub/stub.fna
+    touch dataset/stub/${request.name}.fna
     """
 
 }

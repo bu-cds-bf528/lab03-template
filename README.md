@@ -169,7 +169,7 @@ runtime.
 
 - [ ] Clone the provided classroom50 link
 
-- [ ] As always, remember to activate your environment with nextflow installed
+- [ ] As always, remember to activate your `nextflow_latest` environment
 
 - [ ] Notice the new structure of our `main.nf`. We have made new scripts
 for our processes in the modules/ directory and now will have to use
@@ -247,6 +247,16 @@ task below.
 
 ### main.nf — build the whole workflow
 
+Please look at the `test/` directory and run each of the `.nf` files in 
+order:
+
+1. frompath.nf
+2. splitcsv.nf
+3. map.nf
+
+Each script will print out what each step on lines 20-22 produces. Observe
+how they connect and what the final channel resembles. 
+
 This is the main task. You need to:
 
 - [ ] **Ensure you understand the initial channel generation**, Look at the 
@@ -286,6 +296,18 @@ create the right outputs for you to quickly troubleshoot your workflow.
 - [ ] When you have completed all the steps above, please run your pipeline with
 `nextflow run main.nf -stub`
 
+## Running your pipeline for real
+
+Once you've confirmed that your pipeline works with a stub run, you should see
+all of your processes finish. Check to make sure that the appropriate number
+of processes run based on how many samples are in your `samplesheet.csv`. 
+
+Once you have, run the following command to run your pipeline for real:
+
+```bash
+nextflow run main.nf -profile conda,cluster
+```
+
 ## Process configuration: ext.args and withName:
 
 So far, every command in our `script:` blocks has been fully hard-coded. In
@@ -322,13 +344,42 @@ process {
 }
 ```
 
-- [ ] **Try it yourself:** `modules/prokka/main.nf` reads `task.ext.args ?: ''`,
-and `nextflow.config` sets `--kingdom Bacteria` for `PROKKA` via `withName:`.
-Run the **full pipeline** (not `-stub-run` — a `stub:` block replaces
-`script:` entirely, so `ext.args` never gets substituted into it) and then
-check `.command.sh` for the `PROKKA` task (see "Debugging with nextflow log
-and the work directory" below) — you should see `--kingdom Bacteria` in the
-command that actually ran.
+You should see the above in the `nextflow.config` on lines 16-20. Please uncomment (erase
+the */ and /* on lines 15 and 21) and try re-running your pipeline with the following
+command:
+
+```bash
+nextflow run main.nf -profile conda,cluster -with-report
+```
+
+- [ ] Uncomment the lines in your `nextflow.config`
+- [ ] Observe what happens: which jobs re-run and which remain `cached`?
+
+### Resume
+
+If you look at the last line of the `nextflow.config`, you can see an option specified
+`resume = true`. When nextflow runs, it caches information about jobs that have successfully
+finished. With this option, if your pipeline failed at a later step, nextflow will not re-run
+steps that have already finished. 
+
+There are times when you want your pipeline to start from the beginning, in which case, you will
+want to change this value to `resume = false` or you can delete the directories in `work/` to
+force nextflow to re-run everything. You can avoid deleting the `conda/` directory in `work/` so
+nextflow doesn't have to remake the environments. 
+
+**Back to your pipeline**
+You should see `PROKKA` re-run, along with everything downstream of it including
+`EXTRACT_REGION` and `SAMTOOLS_FAIDX_SUBSET` while `SAMTOOLS_FAIDX` stays
+`cached`. Nextflow computes a hash for each individual task from everything
+that could affect its output: the task's inputs, its script, and the process
+directives applied to it (including `ext.args`). Changing `ext.args` on
+`PROKKA` changes only `PROKKA`'s own hash but it also changes `PROKKA`'s output
+files, and those files are the *input* to `EXTRACT_REGION`, so `EXTRACT_REGION`'s
+hash changes too, and its output cascades the same way into `SAMTOOLS_FAIDX_SUBSET`.
+`SAMTOOLS_FAIDX` never touches `PROKKA`'s output (it depends only on the downloaded
+genome from `NCBI_DATASETS_CLI`), so its inputs are unchanged and it's the one 
+process that stays cached. This reuse only happens because `resume = true` is set
+ in `nextflow.config` — more on that later.
 
 ## Debugging with nextflow log and the work directory
 
@@ -353,12 +404,16 @@ over those fields:
 nextflow log <run_name> -filter 'process == "PROKKA"'
 ```
 
-The `workdir` field above gives you the exact path to inspect. Every task's
-work directory contains, among other things:
+Navigate to the appropriate sub-directory underneath `work/`. You can use
+the one given by the command above or just choose any random subdirectory.
+
+Every task's work directory contains at minimum the following (N.B. each task
+directory will also include that processes' inputs and outputs):
 
 - `.command.sh` — the exact script Nextflow generated and ran (or would have
   run, for a stub run). This is where you go to confirm `ext.args` was
-  actually substituted into the command.
+  actually substituted into the command. You can also see the appropriate
+  variable substitutions that were made.
 - `.command.run` — the wrapper script Nextflow actually submits to the
   executor. It sets up the environment (e.g. activating the conda env) and
   invokes `.command.sh` inside it, wrapped with the bookkeeping Nextflow
@@ -370,71 +425,22 @@ work directory contains, among other things:
   when the task has finished.
 - `.command.begin` — an empty marker file written the instant the task
   starts running (used to compute start time / wait time).
-- `.exitcode` — the exit status of the task's command.
-- `.command.trace` — periodic resource-usage samples (CPU, memory, I/O)
-  collected while the task ran; this is the raw data behind `-with-report`.
+- `.exitcode` — the exit status of the task's command. 1 means an error occured,
+  and 0 means a successful exit.
 
 If you've submitted jobs to the SCC directly with `qsub` before, `.command.out`
 and `.command.err` are Nextflow's equivalent of the `.o<jobid>`/`.e<jobid>`
-files a bare SGE job writes — same idea, different naming convention.
+files a bare SGE job writes. 
 
-```bash
-cd $(nextflow log <run_name> -filter 'process == "PROKKA"' -f workdir | head -1)
-cat .command.sh
-cat .command.out
-cat .command.err
-cat .exitcode
-```
+- [ ] Navigate to the appropriate sub-directory underneath `work/` and inspect
+  the contents of the `.command.sh` file to confirm that `ext.args` was
+  actually substituted into the command.
+- [ ] Check the `.exitcode` file to confirm that the task exited successfully
+  (exit code 0).
+- [ ] Observe how the `qsub` script arguments are found in the `.command.run`
+  file
 
-## Once your pipeline works
 
-The features below are mostly conveniences and production-pipeline
-hygiene, not things a working pipeline strictly needs. Get your full run
-passing first (see "Definition of done" below), then come back and layer
-these on.
-
-- [ ] **Execution reports** — generate `-with-report`, `-with-timeline`, and
-      `-with-dag` output for a run and look at what each one shows you.
-- [ ] **Resume** — understand what `resume = true` in `nextflow.config` does
-      and when you'd want to turn it off.
-- [ ] **Labels** — add a resource `label` to each process in your pipeline.
-- [ ] **Custom label** — define and size your own label for one process,
-      using the SCC's resource request documentation.
-- [ ] **Linting** — run `nextflow lint` (and `nextflow lint -format`) on your
-      pipeline.
-
-### Execution reports (-with-report, -with-timeline, -with-dag)
-
-Nextflow can generate several different reports about a run, each showing
-you something different:
-
-- `-with-report report.html` — resource usage per process: CPU, memory, and
-  time, in a sortable HTML table.
-- `-with-timeline timeline.html` — a Gantt-chart-style view of when each task
-  started and finished, useful for spotting bottlenecks.
-- `-with-dag pipeline.png` — a diagram of how your processes and channels
-  connect. Rendering a `.png` requires Graphviz to be installed; use a
-  `.html` or `.mmd` extension instead if it isn't.
-
-You can combine all three on the same run:
-
-```bash
-nextflow run main.nf -profile local,conda -with-report report.html -with-timeline timeline.html -with-dag pipeline.png
-```
-
-Open the generated files and see what they show you.
-
-### Resume
-
-If you look at the last line of the `nextflow.config`, you can see an option specified
-`resume = true`. When nextflow runs, it caches information about jobs that have successfully
-finished. With this option, if your pipeline failed at a later step, nextflow will not re-run
-steps that have already finished. 
-
-There are times when you want your pipeline to start from the beginning, in which case, you will
-want to change this value to `resume = false` or you can delete the directories in `work/` to
-force nextflow to re-run everything. You can avoid deleting the `conda/` directory in `work/` so
-nextflow doesn't have to remake the environments. 
 
 ### Labels
 
