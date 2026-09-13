@@ -34,21 +34,21 @@ A quick index of everything this lab introduces, and where to find it below.
 - Records and dot notation — see "Records and static typing"
 
 **Running and configuring the pipeline**
-- `stub` block, `-stub-run` flag — see "Stub runs (-stub-run)"
-- `ext.args`, `task.ext.args ?: ''`, `withName:` process selector — see "Process configuration: ext.args and withName:"
+- `stub` block, `-stub` flag — see "Stub runs (-stub)"
+- `ext.args`, `task.ext.args ?: ''`, `withName:` process selector — see "Process configuration: ext.args and withName"
 
 **Debugging**
 - `nextflow log`, `-f` fields, `-filter` expressions — see "Debugging with nextflow log and the work directory"
 - `.command.sh`, `.command.err`, `.exitcode` in the work directory — see "Debugging with nextflow log and the work directory"
 
 **Once your pipeline works** — quality-of-life features, not required for a working pipeline
-- `-with-report`, `-with-timeline`, `-with-dag` — see "Once your pipeline works"
-- `resume` in `nextflow.config` — see "Once your pipeline works"
-- Process `label`s and resource requests in `nextflow.config` — see "Once your pipeline works"
-- `nextflow lint`, `nextflow inspect`, and how `nf-core lint` differs — see "Once your pipeline works"
+- `-with-report` — see "Process configuration: ext.args and withName"
+- `resume` in `nextflow.config` — see "Resume"
+- Process `label`s and resource requests in `nextflow.config` — see "Labels"
+- `nextflow lint` — see "Linting, formatting, and inspecting pipelines"
 
 **Analysis**
-- Jupyter notebooks, conda environments for analysis, circos plots (`pyCirclize`) — see "Lab03 Tasks - Jupyter Notebooks (Together)"
+- Jupyter notebooks, conda environments for analysis, circos plots (`pyCirclize`) — see "Lab 03 Tasks - Jupyter Notebooks (Together)"
 
 ## Small aside - FASTA format
 
@@ -66,7 +66,7 @@ We'll only need to know this much for today's lab — we'll cover the FASTA
 format (and related formats like FASTQ) in much more detail later in the
 course.
 
-## Small aside - FASTA Indexes 
+## Small aside - FASTA Indexes
 
 Though the genomes we are working with today are relatively
 small, it can still be cumbersome to work with such large sequences.
@@ -103,8 +103,6 @@ To extract out a random sequence by its location, you will need the original
 FASTA, the index file, and the region you want the sequence of in the format of
 `chr_name:start_pos-end_pos` or `NC_016845.1:18065-20962`. We will extract out
 this region by looking at the GFF file of the genomes. 
-
-## Background
 
 ## Records and static typing
 
@@ -260,13 +258,14 @@ how they connect and what the final channel resembles.
 This is the main task. You need to:
 
 - [ ] **Ensure you understand the initial channel generation**, Look at the 
-   provided lines in the main.nf from lines 20-22. Run the provided `test.nf`
+   provided lines in the main.nf from lines 20-22. Run the provided
+   `frompath.nf`, `splitcsv.nf`, and `map.nf` test scripts
    to see what these lines will produce.
 - [ ] **Call each process**, wiring each one's output to the next process's
    input, per `specifications.md` > Pipeline steps.
 
 
-## Stub runs are a feature in nextflow that will allow you to develop and troubleshoot your workflow logic
+## Stub runs (-stub)
 
 Now that we are developing real processes and will be submitting them
 to the cluster, you have likely seen already that this can take a fair amount
@@ -308,7 +307,7 @@ Once you have, run the following command to run your pipeline for real:
 nextflow run main.nf -profile conda,cluster
 ```
 
-## Process configuration: ext.args and withName:
+## Process configuration: ext.args and withName
 
 So far, every command in our `script:` blocks has been fully hard-coded. In
 practice you'll often want to tweak a tool's flags per-run or per-process
@@ -440,77 +439,50 @@ files a bare SGE job writes.
 - [ ] Observe how the `qsub` script arguments are found in the `.command.run`
   file
 
+## Labels
+
+At the same level as the `conda` declarations in the `PROKKA` process, add
+a line that specifies a label like so:
+
+```nextflow
+label 'process_medium`
+```
+
+Now go the `nextflow.config` and add a label (with the same formatting) between
+`withLabel: process_single` and `withLabel: process_high`:
+
+```nextflow
+withLabel: process_medium {
+    cpus = 4
+
+}
+```
+
+Now when you run with `-profile cluster,conda`, the `PROKKA` process will use the `process_medium` label,
+which will request 4 CPUs. **However**, this label only *requests* the amount of resources
+from the SCC. You will also need to ensure that your process can make use of the resources by 
+adding the appropriate flags to the `prokka` command in the `PROKKA` process. Not every tool can
+make use of multiple CPUs, so you'll need to check the documentation for the tool to see if it supports
+parallel processing. Prokka supports parallel processing via the `--cpus` flag. Inside the actual command,
+you can use the variable `$task.cpus` to access the value defined in the config.
+
+Navigate to the `PROKKA` process module and replace the hard coded `1` argument after `--cpus` with `$task.cpus`. 
+Once done, re-run your workflow again with
+
+```nextflow
+nextflow run main.nf -profile conda,cluster -with-report
+```
+
+- [ ] While the job is queued or running, run `qstat -j <native_id>` and
+  check what was actually requested
+- [ ] Once the job has finished, run `qacct -j <native_id>` (`qstat` won't
+  show it anymore) — this is the important one: it reports *actual* usage
+  (`maxvmem`, `cpu`, `ru_wallclock`, exit status). `qacct` accounting data
+  can take a few seconds to appear after a job finishes, it may not be
+  there instantly.
 
 
-### Labels
-
-Add a resource `label` (`process_single`, `process_low`, `process_medium`,
-or `process_high`) to each process — these are a way to ensure that your
-jobs request the right number of CPUs or the right amount of memory. We
-define the resources that are requested by these labels in the
-`nextflow.config`. You'll notice these are the same options you would
-specify in a `qsub` command. See `specifications.md` > Resource
-requirements for which processes need more than the default.
-
-A label isn't just documentation — under `-profile cluster`, the
-`withLabel:` blocks in `nextflow.config` (see the `cluster` profile) are
-what Nextflow translates into the actual `qsub` resource request for that
-task (`cpus`, and `clusterOptions` for memory via `mem_per_core`). Pick the
-wrong label and you're either starving a job of resources or wasting a
-shared queue slot the rest of the class needs.
-
-#### Labels and job tracking on the SCC
-
-Once a process has a label and you run with `-profile cluster,conda`, each
-task becomes a real SGE job, and you can inspect it the same way you would
-any job you submitted by hand:
-
-- Get the SGE job ID for a task via `nextflow log`, using the `native_id`
-  field (this is the job ID Nextflow got back from `qsub`):
-
-  ```bash
-  nextflow log <run_name> -f process,native_id,workdir
-  ```
-
-- While the job is queued or running, `qstat -j <native_id>` shows you what
-  was actually requested — queue, requested slots/memory — which should
-  match the label you assigned.
-- Once the job has finished, `qstat` won't show it anymore, but
-  `qacct -j <native_id>` will — and this is the important one: it reports
-  *actual* usage (`maxvmem`, `cpu`, `ru_wallclock`, exit status), the ground
-  truth to compare against what the label requested. (`qacct` accounting
-  data can take a few seconds to appear after a job finishes — don't worry
-  if it's not there instantly.)
-
-- [ ] **Try it yourself:** after a full `-profile cluster,conda` run, find
-  the `PROKKA` task's `native_id` and run `qacct -j` on it. Compare
-  `maxvmem`/`cpu` against the `process_medium`/`process_high` label you
-  gave it in `nextflow.config` — was it sized appropriately, over-, or
-  under-provisioned?
-
-#### Make your own label
-
-`process_single`/`process_low`/`process_medium`/`process_high` are the four
-labels this template ships with — nothing requires you to stop there.
-Define one additional, custom label sized specifically for what you
-observed `PROKKA` actually use in the exercise above, instead of reusing
-one of the four defaults.
-
-- [ ] **Read the resource requests section of the SCC documentation
-  first** (covered in lecture). You need the correct syntax for requesting
-  a specific number of cores and a specific amount of memory on the
-  cluster — get either wrong and your job either won't schedule or will
-  silently reserve far more of a shared queue than it needs.
-- [ ] **Add a new `withLabel:` block** for your custom label under the
-  `cluster` profile in `nextflow.config`, alongside the existing four,
-  sized from what you actually measured rather than a guess.
-- [ ] **Apply it** to `PROKKA` in place of its current label, and re-run
-  with `-profile cluster,conda`.
-- [ ] **Verify it** the same way as above: pull the task's `native_id` and
-  check `qacct -j` — does actual usage now sit close to what you requested,
-  instead of comfortably inside a wider default bucket?
-
-### Linting, formatting, and inspecting pipelines
+## Linting, formatting, and inspecting pipelines
 
 A few commands help you sanity-check a pipeline without actually running it:
 
@@ -529,17 +501,28 @@ A few commands help you sanity-check a pipeline without actually running it:
   nextflow lint -format modules/prokka/main.nf
   ```
 
-- `nextflow inspect <path>` — resolves each process's `container` directive
-  (including anything set via `withName:`/`withLabel:` and profiles) and
-  prints it, without running the pipeline. Handy for confirming a profile
-  picks up the container/conda environment you expect before submitting a
-  real job:
+Now in your directory, please run the following command:
 
-  ```bash
-  nextflow inspect main.nf -profile cluster,conda
-  ```
+```nextflow
+nextflow lint .
+```
 
-## Lab03 Tasks - Jupyter Notebooks (Together)
+On your terminal, you will probably see 3 warnings and 8 files passing. The 3 warnings are
+about an unused variable (the final output) and two deprecated uses of the `shell` block. Go to
+the files where it warned about the `shell` block usage and replace them with `script`.
+
+You can also use a built-in formatted to reformat any nextflow file according to standard
+conventions.
+
+**Optional**
+Choose any working nextflow module and run the following command:
+
+```nextflow
+nextflow lint -format modules/<name-of-module>/main.nf
+```
+
+
+## Lab 03 Tasks - Jupyter Notebooks (Together)
 
 Jupyter notebooks are a convenient environment for bioinformatics analysis. They allow you
 to intersperse code along with text and figures in the same document. It is very common
