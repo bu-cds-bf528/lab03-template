@@ -46,6 +46,7 @@ A quick index of everything this lab introduces, and where to find it below.
 - `resume` in `nextflow.config` — see "Resume"
 - Process `label`s and resource requests in `nextflow.config` — see "Labels"
 - `nextflow lint` — see "Linting, formatting, and inspecting pipelines"
+- `results` - Learn how you can use the `results` directory to store your results outside of the `work` directory
 
 **Analysis**
 - Jupyter notebooks, conda environments for analysis, circos plots (`pyCirclize`) — see "Lab 03 Tasks - Jupyter Notebooks (Together)"
@@ -520,6 +521,23 @@ Choose any working nextflow module and run the following command:
 ```nextflow
 nextflow lint -format modules/<name-of-module>/main.nf
 ```
+
+## Results - moving important files outside of the work directory
+
+By now, you've likely noticed that it's somewhat cumbersome to navigate through
+the `work` directory. Nextflow has a built-in convention for `publishing` certain
+outputs to a more convenient location, `results`, by default. 
+
+If you look under the `publish:` block in the `main.nf`, you'll notice that we have
+saved the output of PROKKA to a new variable called `prokka_results`. Below the `workflow`
+block, you can see we have one more block: `output` and this is where `prokka_results` is
+listed. 
+
+Both of these lines together will instruct Nextflow to save the outputs (just the outputs
+declared in the process, not the accessory files) of the declared variables to the `results/`
+directory. This will enable you to more easily find or inspect important outputs from your
+processes. Please note that for every variable declared under `publish:`, you must have 
+declare it also in the `output` block or nextflow will throw an error. 
 
 
 ## Lab 03 Tasks - Jupyter Notebooks (Together)
