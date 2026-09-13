@@ -179,7 +179,11 @@ in our workflow.
 
 **Given, working — read but you don't need to edit these:**
 - `modules/samtools_faidx_subset` — fully complete
-- `bin/`, `envs/`, `nextflow.config`, `samplesheet.csv`
+- `bin/`, `envs/`, `nextflow.config`, `samplesheet.csv`, `specifications.md`
+
+`specifications.md` describes what the pipeline as a whole needs to do — read it
+before you start, and refer back to it for the exact record shapes each
+step consumes and produces.
 
 **You write:**
 - [ ] `modules/ncbi_datasets_cli` — the `AssemblyRequest` and `Genome` record types
@@ -188,11 +192,11 @@ in our workflow.
 - [ ] `modules/samtools_faidx` — the `input:`/`output:` block
 - [ ] `main.nf` — the entire workflow: the starting channel and every process wired together
 
-`specifications.md` describes what the pipeline as a whole needs to do — read it
-before you start, and refer back to it for the exact record shapes each
-step consumes and produces.
 
 ## Lab 03 Tasks - Nextflow
+
+If you want, you can right click on the README.md and select "Open Preview", which
+will open a slightly nicer, mostly formatted version of this document.
 
 Read `specifications.md` first as it describes the whole pipeline (inputs,
 outputs, per-step dependencies, environments, resource requirements)
