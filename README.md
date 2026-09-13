@@ -416,6 +416,10 @@ generated in your directory.
 - [ ] Take a look at the HTML report that was generated when the re-run of your
   pipeline finished
 
+- [ ] Find where the new PROKKA processes ran for this re-run. Find one of their
+  work directories and note the `.command.sh`. Compare what is added to the command
+  compared to earlier.
+
 ## Debugging with nextflow log and the work directory
 
 Every process execution happens in its own isolated directory under `work/`,
