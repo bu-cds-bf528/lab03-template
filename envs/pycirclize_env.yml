@@ -1,0 +1,8 @@
+name: pycirclize_env
+channels:
+- conda-forge
+- bioconda
+
+dependencies:
+- pycirclize=1.7.1
+- ipykernel=6.29.5
