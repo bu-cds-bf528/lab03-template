@@ -16,7 +16,7 @@ workflow {
     // map is an operator that applies a function to each item from a channel
     // in this case, we are converting each row of the CSV into a record with 
     // the elements found in the file
-
+    main:
     download_ch = channel.fromPath(params.samplesheet)
     .splitCsv(header: true)
     .map{ row -> record(name: row.name, assembly: row.assembly)}
@@ -25,4 +25,16 @@ workflow {
     // SAMTOOLS_FAIDX, and SAMTOOLS_FAIDX_SUBSET per SPEC.md > Pipeline steps.
     // Two branches need to be recombined before the last step.
 
+    // TODO: Ensure you save the PROKKA outputs to `annot_ch`
+
+
+    publish:
+    prokka_results = annot_ch
+
+}
+
+output {
+    prokka_results {
+        
+    }
 }
