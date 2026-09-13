@@ -322,6 +322,21 @@ all your different jobs run on compute nodes as the workflow progresses.
 You can also use `qstat -j <job-id-from-qstat>` to see more details about your
 job.
 
+When the pipeline has finished, use `nextflow log` and find the `RUN NAME` of the
+most recent pipeline run. Once you've found the most recent run, use the following
+command:
+
+```bash
+nextflow log <run_name> -filter 'process == "PROKKA"'
+```
+
+This will show you the directory where the PROKKA processes ran. Navigate to one
+and make note of the `.command.sh` and observe the command that was actually 
+executed. 
+
+- [ ] Find the directory where one PROKKA process ran and observe the command.
+  Keep this comparison in mind for the results of the next section.
+
 ## Process configuration: ext.args and withName
 
 So far, every command in our `script:` blocks has been fully hard-coded. In
@@ -359,8 +374,8 @@ process {
 ```
 
 You should see the above in the `nextflow.config` on lines 16-20. Please uncomment (erase
-the */ and /* on lines 15 and 21) and try re-running your pipeline with the following
-command:
+the */ and /* on lines 15 and 21), save the file and try re-running your pipeline
+with the following command:
 
 ```bash
 nextflow run main.nf -profile conda,cluster -with-report
@@ -395,6 +410,12 @@ genome from `NCBI_DATASETS_CLI`), so its inputs are unchanged and it's the one
 process that stays cached. This reuse only happens because `resume = true` is set
  in `nextflow.config` — more on that later.
 
+Wait until this new re-run finishes and take a look at the HTML report that was
+generated in your directory.
+
+- [ ] Take a look at the HTML report that was generated when the re-run of your
+  pipeline finished
+
 ## Debugging with nextflow log and the work directory
 
 Every process execution happens in its own isolated directory under `work/`,
@@ -409,13 +430,6 @@ run's tasks:
 
 ```bash
 nextflow log <run_name> -f process,status,exit,duration,workdir
-```
-
-You can narrow this down with `-filter`, using a Groovy boolean expression
-over those fields:
-
-```bash
-nextflow log <run_name> -filter 'process == "PROKKA"'
 ```
 
 Navigate to the appropriate sub-directory underneath `work/`. You can use
@@ -482,7 +496,7 @@ parallel processing. Prokka supports parallel processing via the `--cpus` flag. 
 you can use the variable `$task.cpus` to access the value defined in the config.
 
 Navigate to the `PROKKA` process module and replace the hard coded `1` argument after `--cpus` with `$task.cpus`. 
-Once done, re-run your workflow again with
+Once done, re-run your workflow again with the following command:
 
 ```nextflow
 nextflow run main.nf -profile conda,cluster -with-report
