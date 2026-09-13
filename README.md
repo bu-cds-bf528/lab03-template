@@ -511,6 +511,8 @@ nextflow run main.nf -profile conda,cluster -with-report
   seconds to appear after a job finishes, it may not be there instantly.
 - [ ] Check the `.command.sh` for one of the new PROKKA processes, and ensure
   you see the value from `process_medium` in the script command.
+- [ ] You should be able to see that your pipeline finishes faster than the
+  previous run
 
 ## Linting, formatting, and inspecting pipelines
 
