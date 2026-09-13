@@ -570,22 +570,3 @@ declared in the process, not the accessory files) of the declared variables to t
 directory. This will enable you to more easily find or inspect important outputs from your
 processes. Please note that for every variable declared under `publish:`, you must have 
 declare it also in the `output` block or nextflow will throw an error. 
-
-
-## Lab 03 Tasks - Jupyter Notebooks (Together)
-
-Jupyter notebooks are a convenient environment for bioinformatics analysis. They allow you
-to intersperse code along with text and figures in the same document. It is very common
-for many analyses in bioinformatics to be done entirely within a jupyter notebook. 
-
-In order for us to utilize these notebooks to their fullest potential, we usually
-want to make use of different software libraries. We will create a conda environment
-for our notebooks in a very similar fashion as we have done for every other environment
-in this class but with a few modifications. 
-
-Once we have created this environment, we can open a jupyter notebook in either the same
-VSCode session or a dedicated JupyterLab session (OnDemand Interactive app). This will
-allow us to use any software installed in these environments in our notebook.
-
-We will then use the results generated from our pipeline and create a quick visualization
-of the genome annotations that were created in the form of a [circos plot](https://moshi4.github.io/pyCirclize/circos_plot/).
