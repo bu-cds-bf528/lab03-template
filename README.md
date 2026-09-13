@@ -513,7 +513,8 @@ nextflow run main.nf -profile conda,cluster -with-report
   (`maxvmem`, `cpu`, `ru_wallclock`, exit status). `qacct` accounting data
   can take a few seconds to appear after a job finishes, it may not be
   there instantly.
-
+- [ ] Check the `.command.sh` for one of the new PROKKA processes, and ensure
+  you see the value from `process_medium` in the script command.
 
 ## Linting, formatting, and inspecting pipelines
 
