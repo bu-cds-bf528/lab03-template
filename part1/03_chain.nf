@@ -25,7 +25,7 @@ process STEP_ONE {
     """
 }
 
-record StepOne{
+record StepOutput {
     name: String
     log: File
 
@@ -34,12 +34,12 @@ record StepOne{
 // TODO: Complete the STEP_TWO process output based on the file created in the
 // script
 
-// It should take the StepOne record as input
+// It should take the StepOutput record as input
 
 process STEP_TWO {
 
     input:
-    sample: StepOne
+    sample: StepOutput
 
     // TODO: Make a record that has the fields name and log. The name should be the 
     // same name from the input record. The name of the file created can be seen
