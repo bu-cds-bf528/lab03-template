@@ -71,7 +71,7 @@ process FINAL {
     script:
     """
     echo "THIS PROCESS CATS / COMBINES THE RESULT FROM STEP ONE A AND THE RESULT FROM STEP ONE B"
-    cat final.a_result final.b_result > final_file.txt
+    cat ${sample.a_result} ${sample.b_result} > final_file.txt
     """
 
 }
