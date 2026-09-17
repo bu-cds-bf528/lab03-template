@@ -44,6 +44,8 @@ process STEP_TWO {
     // TODO: Make a record that has the fields name and log. The name should be the 
     // same name from the input record. The name of the file created can be seen
     // in the script command
+    output:
+    
     
 
     script:
