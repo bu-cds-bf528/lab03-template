@@ -463,4 +463,4 @@ end up with the same number of joined records as samples in the samplesheet.
 
 ---
 
-[← Back to Lab 03 overview](../README.md) · [Continue to Part 2 →](../PART2.md)
+[← Back to Lab 03 overview](../README.md) · [Continue to Part 2 →](../part2/README.md)
