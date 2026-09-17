@@ -26,7 +26,7 @@ with a diagram showing exactly what's new. **Operate your pipeline** then
 covers operating and debugging the finished pipeline (stub vs. real runs,
 resource labels, `nextflow log`, linting, publishing results).
 
-This is the same pipeline you were exposed to before. 
+This is the same pipeline from `specifications.md`, which you were exposed to before.
 
 ## Setup
 
@@ -50,9 +50,9 @@ the small file first, then the one after it.
 Every stage is small enough to validate in seconds with a stub run before you
 move on:
 
-### Stub runs (-stub-run)
+### Stub runs (-stub)
 
-Nextflow offers a `-stub-run` flag. Instead of running a process's real
+Nextflow offers a `-stub` flag. Instead of running a process's real
 `script:`/`shell:` block, it runs that process's `stub:` block instead — for
 every process here, the stub just `touch`es placeholder files with the right
 names. This lets you check that your *wiring* (channels, records, which
@@ -60,7 +60,7 @@ process feeds which) is correct in seconds, without waiting on real
 downloads/annotation/indexing or needing any tool actually installed. Every
 module below already has a working `stub:` block given to you.
 
-You'll use `nextflow run <file> -stub-run` after every stage.
+You'll use `nextflow run <file> -stub` after every stage.
 
 ### part2/01_request.nf
 
@@ -93,8 +93,8 @@ flowchart LR
 
 **What's Changed**
 
-All that's changed from last time is we have now passed the initial channel 
-we generated to the actual NCBI_DATASETS_CLI process. 
+All that's changed from last time is we have now passed the initial channel
+we generated to the actual NCBI_DATASETS_CLI process.
 
 **To Do**
 
@@ -105,7 +105,7 @@ we generated to the actual NCBI_DATASETS_CLI process.
 2. Run the following:
 
 ```bash
-nextflow run part2/02_download.nf -stub-run
+nextflow run part2/02_download.nf -stub
 ```
 
 `02_download.nf` should run one `NCBI_DATASETS_CLI` process and print a
@@ -122,17 +122,19 @@ flowchart LR
 ```
 
 **What's Changed**
-We have now taken the output of NCBI_DATASETS_CLI and we want to run another task
-using what was downloaded. 
 
-**To Do:**
+We have now taken the output of NCBI_DATASETS_CLI and we want to run another task
+using what was downloaded.
+
+**To Do**
+
 1. In `modules/prokka/main.nf`, make the `output` record containing the name from
 the original record and the file created by PROKKA (given in the code)
 
-2. Run the command: `nextflow run 03_prokka.nf -stub`
+2. Run the command: `nextflow run part2/03_prokka.nf -stub`
 
 `03_prokka.nf` should run `NCBI_DATASETS_CLI` → `PROKKA` and print an
-`Annotation` record (`name`, `gff`). 
+`Annotation` record (`name`, `gff`).
 
 ### part2/04_chain.nf
 
@@ -148,6 +150,14 @@ flowchart LR
 **What's Changed**
 
 We are adding a new process that now takes the output we just generated from PROKKA.
+
+**To Do**
+
+1. Run the command: `nextflow run part2/04_chain.nf -stub` and observe what
+gets printed to your terminal.
+
+`04_chain.nf` should run `NCBI_DATASETS_CLI` → `PROKKA` → `EXTRACT_REGION` and
+print a `Region` record (`name`, `region`).
 
 ### part2/05_scale_request.nf
 
@@ -168,11 +178,12 @@ flowchart LR
 Instead of hard-coding values in our scripts, we often want to encode this
 information in a structured file (CSV) that will allow us to pass multiple
 samples to our pipeline. This also makes it convenient if we ever need to add
-or remove samples. 
+or remove samples.
 
 **To Do**
+
 1. Use `map`, `channel.fromPath`, and `splitCsv()` to view a channel that holds
-the information from the samplesheet provided. 
+the information from the samplesheet provided.
 
 2. Run the command: `nextflow run part2/05_scale_request.nf`
 
@@ -210,7 +221,7 @@ this series of processes will happen in parallel for each.
 **To Do**
 
 1. Copy your working code from `part2/05_scale_request.nf` to the beginning of
-your workflow in `part2/06_scale.nf`. 
+your workflow in `part2/06_scale.nf`.
 
 2. Run the command: `nextflow run part2/06_scale.nf -stub`
 
@@ -230,12 +241,15 @@ flowchart LR
 ```
 
 **What's Changed**
+
 We are adding a process that also uses the `genome_ch` we generated earlier. This
 process can run in parallel directly after the `NCBI_DATASETS_CLI` process finishes
-because it only requires the outputs from that process. 
+because it only requires the outputs from that process.
 
 **To Do**
+
 1. Fill in and complete the `input` and `output` in `part2/07_faidx.nf`
+
 2. Run the command: `nextflow run part2/07_faidx.nf -stub` and observe what gets printed
 to your terminal.
 
@@ -256,10 +270,11 @@ flowchart LR
 
 **What's Changed**
 
-Nothing new to write, this file just shows you that both will run and you can 
-observe the outputs.
+Nothing new to write — this file just runs both branches together so you can
+observe their outputs independently.
 
 **To Do**
+
 1. Run the command: `nextflow run part2/08_branch.nf -stub` and observe
 that both branches print, independently, for each sample.
 
@@ -275,18 +290,20 @@ flowchart LR
 ```
 
 **What's Changed**
+
 This pipeline is nearly complete but we now need to generate a record that per
-sample combines the output from the `EXTRACT_REGIONS` process and the `SAMTOOLS_FAIDX`
-process. 
+sample combines the output from the `EXTRACT_REGION` process and the `SAMTOOLS_FAIDX`
+process.
 
 **To Do**
+
 1. In `part2/09_join.nf`, use the join operator to create a channel with records
 that have all the fields needed for the final process, `SAMTOOLS_FAIDX_SUBSET`.
-2. Run the command: `nextflow run part2/09_join.nf -stub` and observe what get's printed
 
+2. Run the command: `nextflow run part2/09_join.nf -stub` and observe what gets printed.
 
 `part2/09_join.nf` should print an `IndexedGenomeRegion` record (`name`, `fna`,
-`fai`, `region`) for each sample. `
+`fai`, `region`) for each sample.
 
 
 ### main.nf
@@ -300,16 +317,23 @@ flowchart LR
 ```
 
 **What's Changed**
+
 We have now built the entire pipeline and have joined two records from separate
 processes together so that we may perform the final step, which requires the
-output from both `EXTRACT_REGION` and `SAMTOOLS_FAIDX`. 
+output from both `EXTRACT_REGION` and `SAMTOOLS_FAIDX`.
 
 **To Do**
 
 1. In `main.nf`, copy and paste your working code that joins the outputs together
 from `part2/09_join.nf`.
+
 2. In the `workflow`, call the final process on the joined channel.
+
 3. Run the command: `nextflow run main.nf -stub`
+
+`main.nf` should run the full pipeline end-to-end for both samples, producing a
+`Subset` record (`name`, `subset_fna`) for each — this is the "Stub-run
+milestone" from `specifications.md`.
 
 ### The entire pipeline
 
@@ -698,7 +722,7 @@ this region by looking at the GFF file of the genomes.
   "samtools_faidx_subset"
 
 **Running and configuring the pipeline**
-- `stub` block, `-stub-run` flag — see "Stub runs (-stub-run)" and "Build the
+- `stub` block, `-stub` flag — see "Stub runs (-stub)" and "Build the
   pipeline"
 - `ext.args`, `task.ext.args ?: ''`, `withName:` process selector — see "Process
   configuration: ext.args and withName"
