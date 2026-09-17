@@ -6,7 +6,7 @@
 
 You can fill in `- [ ]` with an X to check them off when rendered. This is optional.
 I included a small example of how to periodically push your work for labs at the
-end of part1/01, if you're already familiar, you can skip past it.
+end of `part1/01_records.nf`, if you're already familiar, you can skip past it.
 
 ## Setup
 
@@ -57,7 +57,7 @@ sample: Genome
 and accesses fields by name (`sample.name`, `sample.fna`) rather than by
 position. The name `sample` assigned in this input is specific and local to this
 module. It will allow you to internally reference the elements of the Genome
-record using sample.name or sample.fna, which are the corresponding elements in
+record using `sample.name` or `sample.fna`, which are the corresponding elements in
 the named record `Genome`.
 
 Outputs are constructed with the `record(...)` function, e.g.:
@@ -117,7 +117,7 @@ obtain to be processed by the rest of our pipeline.
 
 **To Do**
 
-1. Complete the part1/01_records.nf as directed in the file
+1. Complete the `part1/01_records.nf` as directed in the file
 2. When finished, run the script: `nextflow run part1/01_records.nf`
 3. Observe what gets printed to the screen and find where the output was created
 
@@ -133,13 +133,13 @@ whatever file(s) that record needs to carry.
 **Making a commit and tracking your changes (Optional if you already are familiar)**
 
 Get into the habit of frequently committing and pushing your work to github. We
-(you) have just changed the part1/01_records.nf file.
+(you) have just changed the `part1/01_records.nf` file.
 
 Whenever you are happy with a change or addition to your code (you have confirmed
 it works or meets your specifications):
 
 1. Run `git status` - this will identify files that have changed since your last
-commit. You will see the part1/01_records.nf file here.
+commit. You will see the `part1/01_records.nf` file here.
 
 2. Run `git add part1/01_records.nf` to stage this file to be committed - you can
 add other files that have changed as well but this can also just be a single file.
@@ -161,7 +161,7 @@ be there (i.e. they are not code or results or documentation), you can edit your
 3. Run `git commit -m "adds working code to part1/01_records.nf"` - the exact message can be
 different but this will make a commit in the repository and record the exact
 changes to this file. If you forget the `-m`, you will be entered into a command
-line text editor (nano, vim) and will be asked to write the message in there instead.
+line text editor (`nano`, `vim`) and will be asked to write the message in there instead.
 
 N.B. You typically want to `add` and `commit` files in related groups. In theory,
 each commit should encompass one logical change to the code. This can be seen
@@ -174,7 +174,7 @@ on your corresponding GitHub repository page.
 
 ### Before moving on
 
-In part1/01_records.nf, make sure you have done the following:
+In `part1/01_records.nf`, make sure you have done the following:
 
 - [ ] Make a new record of your own construction, make sure you save the file
 - [ ] Run the script: `nextflow run part1/01_records.nf` and view what gets
@@ -201,15 +201,15 @@ In part1/01_records.nf, make sure you have done the following:
 
 **To Do**
 
-1. Complete the part1/02_process.nf as directed in the file
+1. Complete the `part1/02_process.nf` as directed in the file
 2. When finished, run the script: `nextflow run part1/02_process.nf`
 3. Observe what gets printed to the screen and find where the output was created
 
 What gets printed to the terminal is a channel containing a record. Unlike
-`part1/01_records.nf`, this channel is now what gets produced by the STEP_ONE
+`part1/01_records.nf`, this channel is now what gets produced by the `STEP_ONE`
 process. It is a channel containing a record that holds the information generated
-from the STEP_ONE process: the name of the sample carried by the original record
-(our starting point) and the file created by STEP_ONE (example.log).
+from the `STEP_ONE` process: the name of the sample carried by the original record
+(our starting point) and the file created by `STEP_ONE` (`example.log`).
 
 **Take Note**
 
@@ -238,7 +238,7 @@ a quick way to run a process against one fixed record before scaling up to a
 real samplesheet (which is exactly what `04_scale.nf` replaces it with). 
 
 **work directory:** By default, nextflow stores all results in the `work/` directory
-After your process has successfully run, find the directory where the STEP_ONE
+After your process has successfully run, find the directory where the `STEP_ONE`
 process was executed in `work/`. It should look something like below:
 
 ![nextflow_dir](../imgs/nextflow_run.png)
@@ -248,12 +248,12 @@ look different. Look into the `work/` directory and find that directory - for me
 it would be under `work/31/6797bf.......`
 
 Look inside the directory and note how the file created has been named with the
-value from the `name` field in the input record and that the sampleA.log file
-also holds the value substsitute in from the field. 
+value from the `name` field in the input record and that the `sampleA.log` file
+also holds the value substsitute in from the field.
 
 ### Before moving on
 
-In part1/02_process.nf, make sure you have done the following:
+In `part1/02_process.nf`, make sure you have done the following:
 
 - [ ] Make a new record of your own construction, make sure you save the file
 - [ ] Run the script: `nextflow run part1/02_process.nf` and view what gets
@@ -285,7 +285,7 @@ In part1/02_process.nf, make sure you have done the following:
 
 **To Do**
 
-1. Complete the part1/03_chain.nf as directed in the file
+1. Complete the `part1/03_chain.nf` as directed in the file
 2. When finished, run the script: `nextflow run part1/03_chain.nf`
 3. Observe what gets printed to the screen and find where the output was created
 
@@ -299,7 +299,7 @@ We will use string interpolation `${sample.name}` to substitute in that value
 from the record. Most programs will have some rules or guidelines about the naming
 conventions of files produced. We will often take advantage of this to directly
 name the files produced by processes with these values we have carried through
-in our records (e.g. ${sample.name}.step2.log).
+in our records (e.g. `${sample.name}.step2.log`).
 
 **Workflow:** By convention, you will save the output of every process using the `=`
 operator to a variable that you name. You can call the processes by their name
@@ -307,11 +307,11 @@ specified after process.
 
 ### Before moving on
 
-In part1/03_chain.nf, ensure that you have done the following:
+In `part1/03_chain.nf`, ensure that you have done the following:
 
-- [ ] Construct the new process STEP_TWO by filling in the blanks
+- [ ] Construct the new process `STEP_TWO` by filling in the blanks
 - [ ] In the `workflow` block, connect the processes by passing the outputs of
-      STEP_ONE to STEP_TWO and observe the outputs
+      `STEP_ONE` to `STEP_TWO` and observe the outputs
 - [ ] Find where each output was created and look at the contents of each directory
 
 ## part1/04_scale.nf
@@ -337,7 +337,7 @@ In part1/03_chain.nf, ensure that you have done the following:
 
 **To Do**
 
-1. Complete the part1/04_scale.nf as directed in the file
+1. Complete the `part1/04_scale.nf` as directed in the file
 2. When finished, run the script: `nextflow run part1/04_scale.nf`
 3. Observe what gets printed to the screen and find where the output was created
 
@@ -363,7 +363,7 @@ same `name` field.
       each row of the `params.part1_samplesheet` to a channel containing records with
       the same information.
 - [ ] View the contents of the channel generated above as well as the output
-      channel of STEP_TWO
+      channel of `STEP_TWO`
 - [ ] Find where each output was created and look at the contents of each directory
 
 
@@ -396,8 +396,8 @@ same `name` field.
 
 **To Do**
 
-1. Complete the part1/05_scale.nf as directed in the file
-2. When finished, run the script: `nextflow run part1/05_scale.nf`
+1. Complete the `part1/05_parallel.nf` as directed in the file
+2. When finished, run the script: `nextflow run part1/05_parallel.nf`
 3. Observe what gets printed to the screen and find where the output was created
 
 
