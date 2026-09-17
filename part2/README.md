@@ -2,7 +2,7 @@
 
 [← Back to Lab 03 overview](../README.md) · [← Back to Part 1](../part1/README.md)
 
-If you haven't done [Part 1: Learn the DSL](part1/README.md) yet, do that
+If you haven't done [Part 1: Learn the DSL](../part1/README.md) yet, do that
 first — it covers the `record`/channel syntax this part assumes you already
 know.
 
