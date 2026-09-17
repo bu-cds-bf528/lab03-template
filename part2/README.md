@@ -20,13 +20,13 @@ a number of concepts and aspects of nextflow that you will be using throughout
 the semester.
 
 Rather than building the whole five-process pipeline in one go, **Build the
-pipeline** below walks you through it as five small, cumulative stages —
-each one a working, runnable pipeline that's one step bigger than the last,
-with a diagram showing exactly what's new. **Operate your pipeline** then
-covers operating and debugging the finished pipeline (stub vs. real runs,
-resource labels, `nextflow log`, linting, publishing results).
+pipeline** below walks you through it in cumulative stages, showing you what's
+new in each addition. **Operate your pipeline** then covers operating and 
+debugging the finished pipeline (stub vs. real runs, resource labels, `nextflow log`,
+linting, publishing results).
 
-This is the same pipeline from `specifications.md`, which you were exposed to before.
+This is the same pipeline from `specifications.md`, which you were exposed to 
+before.
 
 ## Setup
 
