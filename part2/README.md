@@ -95,7 +95,7 @@ we generated to the actual NCBI_DATASETS_CLI process.
 
 **To Do**
 
-1. In `modules/ncbi_datasets_cli` — declare the `AssemblyRequest` (input) and
+1. In `modules/ncbi_datasets_cli/main.nf` — declare the `AssemblyRequest` (input) and
   `Genome` (output) `record` types at the top of the file. I have defined for you
   what should be contained within each.
 
@@ -150,7 +150,10 @@ We are adding a new process that now takes the output we just generated from PRO
 
 **To Do**
 
-1. Run the command: `nextflow run part2/04_chain.nf -stub` and observe what
+1. In `part2/04_chain.nf`, fill in the inputs and outputs in the script line
+by looking at the `input` and `output` blocks given.
+
+2. Run the command: `nextflow run part2/04_chain.nf -stub` and observe what
 gets printed to your terminal.
 
 `04_chain.nf` should run `NCBI_DATASETS_CLI` → `PROKKA` → `EXTRACT_REGION` and
