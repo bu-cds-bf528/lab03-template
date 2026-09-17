@@ -1,6 +1,6 @@
 # Part 1: Learn the DSL
 
-[← Back to Lab 03 overview](../README.md) · [Continue to Part 2 →](../PART2.md)
+[← Back to Lab 03 overview](../README.md) · [Continue to Part 2 →](../part2/README.md)
 
 ## Notes
 
