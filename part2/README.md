@@ -182,7 +182,7 @@ or remove samples.
 
 **To Do**
 
-1. Use `map`, `channel.fromPath`, and `splitCsv()` to view a channel that holds
+1. Use `map`, `channel.fromPath`, and `splitCsv(header: true)` to view a channel that holds
 the information from the samplesheet provided.
 
 2. Run the command: `nextflow run part2/05_scale_request.nf`
