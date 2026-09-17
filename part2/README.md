@@ -56,7 +56,8 @@ process feeds which) is correct in seconds, without waiting on real
 downloads/annotation/indexing or needing any tool actually installed. Every
 module below already has a working `stub:` block given to you.
 
-You'll use `nextflow run <file> -stub` after every stage.
+You'll use `nextflow run <file> -stub` after most stages unless specified
+otherwise.
 
 ### part2/01_request.nf
 
