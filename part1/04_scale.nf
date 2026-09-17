@@ -66,7 +66,7 @@ workflow {
     // together one after another
 
     // Use .view() to see the channel first. When it has the correct structure,
-    // remove the .view() operator and save this to a variable called `sample_ch`.
+    // remove the .view() operator and save this to a variable called `csv_ch`.
 
 
     // GIVEN: run the same chain from 03_chain.nf, now driven by
