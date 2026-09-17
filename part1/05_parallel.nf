@@ -27,6 +27,7 @@ process STEP_ONE_A {
 // TODO: declare a second branch process, STEP_ONE_B, structurally identical
 // to STEP_ONE_A but with its own output field (e.g. b_result) and echo
 // message — e.g. "STEP_ONE_B processing ${sample.name} and ${sample.condition}" > ${sample.name}.step1b.log
+// Make sure you update all references to use the correct file generated (step1b)
 
 
 workflow {
