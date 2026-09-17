@@ -11,25 +11,6 @@ record Sample {
     condition: String
 }
 
-record StepOneA {
-    name: String
-    condition: String
-    a_result: File
-}
-
-record StepOneB {
-    name: String
-    condition: String
-    b_result: File
-}
-
-record Final {
-    name: String
-    condition: String
-    a_result: File
-    b_result: File
-}
-
 // GIVEN: two independent branches off the same starting channel
 
 process STEP_ONE_A {
@@ -46,6 +27,13 @@ process STEP_ONE_A {
     """
 }
 
+record StepOneA {
+    name: String
+    condition: String
+    a_result: File
+}
+
+
 process STEP_ONE_B {
 
     input:
@@ -58,6 +46,12 @@ process STEP_ONE_B {
     """
     echo "STEP_ONE_B processing ${sample.name} and ${sample.condition}" > ${sample.name}.step1b.txt
     """
+}
+
+record StepOneB {
+    name: String
+    condition: String
+    b_result: File
 }
 
 process FINAL {
@@ -76,6 +70,13 @@ process FINAL {
 
 }
 
+record Final {
+    name: String
+    condition: String
+    a_result: File
+    b_result: File
+}
+
 workflow {
 
     // GIVEN: same samplesheet-driven channel as 04_scale.nf.
@@ -88,8 +89,8 @@ workflow {
     // is exactly what Stage 5 needs to do with faidx_ch and region_ch. You'll
     // notice that the two output channels share a common key (name), which can be
     // used to join their contents together. After using .view() to determine
-    // it has the right contents, save it to a variable and call the FINAL 
-    // process on it
+    // it has the right contents, save it to a variable called join_ch and call 
+    // the FINAL process on it
 
     
 
