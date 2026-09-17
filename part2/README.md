@@ -40,12 +40,8 @@ Instead of writing `main.nf` all at once, you'll build the pipeline up as
 five stages. **Each stage's file is the previous stage's file plus exactly
 one new thing**
 
-Within `part2/`, the *new* thing being introduced usually gets its own small
-file first — just that one addition, ending in a `.view()` so you can see
-exactly what it produces before it's wired into the stage's next file. For
-example, `part2/01_request.nf` builds and views the starting channel on its
-own; `part2/02_download.nf` then adds the one process call on top of it. Run
-the small file first, then the one after it.
+For example, `part2/01_request.nf` builds and views the starting channel on its
+own; `part2/02_download.nf` then adds the one process call on top of it.
 
 Every stage is small enough to validate in seconds with a stub run before you
 move on:
