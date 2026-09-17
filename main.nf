@@ -37,6 +37,7 @@ workflow {
     // it to a variable
 
     // TODO: Call the final process, SAMTOOLS_FAIDX_SUBSET on this joined channel
+    // and save it to a variable of your choosing.
 
     publish:
     prokka_results = annot_ch
