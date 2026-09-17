@@ -92,6 +92,9 @@ workflow {
     // it has the right contents, save it to a variable called join_ch and call 
     // the FINAL process on it
 
+    // Feel free to view both the joined_ch as well as the output from calling
+    // FINAL
+
     
 
 }
