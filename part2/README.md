@@ -221,7 +221,7 @@ this series of processes will happen in parallel for each.
 **To Do**
 
 1. Copy your working code from `part2/05_scale_request.nf` to the beginning of
-your workflow in `part2/06_scale.nf`.
+your workflow in `part2/06_scale.nf`. The line that generates `request_ch`.
 
 2. Run the command: `nextflow run part2/06_scale.nf -stub`
 
@@ -248,7 +248,7 @@ because it only requires the outputs from that process.
 
 **To Do**
 
-1. Fill in and complete the `input` and `output` in `part2/07_faidx.nf`
+1. Fill in and complete the `input` and `output` in `modules/samtools_faidx/main.nf`
 
 2. Run the command: `nextflow run part2/07_faidx.nf -stub` and observe what gets printed
 to your terminal.

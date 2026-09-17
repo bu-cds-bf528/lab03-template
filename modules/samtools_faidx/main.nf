@@ -19,7 +19,7 @@ process SAMTOOLS_FAIDX {
     // TODO: Fill in the input and output for this process
 
     // Hint: You can use the * in bash to capture any file ending in a certain
-    // pattern. The index will end in ".fna"
+    // pattern. The index will end in ".fai"
 
 
     shell:
