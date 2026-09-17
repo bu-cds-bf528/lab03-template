@@ -15,7 +15,7 @@ workflow {
 
     genome_ch = NCBI_DATASETS_CLI(request_ch)
 
-    // NEW: a second, independent branch off genome_ch.
+    // NEW: another process that uses genome_ch from NCBI_DATASETS_CLI
     faidx_ch = SAMTOOLS_FAIDX(genome_ch)
 
     faidx_ch.view()

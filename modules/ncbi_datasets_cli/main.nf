@@ -2,12 +2,11 @@
 
 nextflow.enable.types = true
 
-// TODO: declare the AssemblyRequest record — see SPEC.md > Inputs
-// Fields: name (String), assembly (String)
+// TODO: declare the AssemblyRequest record with fields name (String), and
+// assembly (String)
 
 
-// TODO: declare the Genome record — see SPEC.md > Pipeline steps
-// Fields: name (String), fna (Path)
+// TODO: declare the Genome record with fields name (String), and fna (Path)
 
 
 process NCBI_DATASETS_CLI {

@@ -24,9 +24,8 @@ process PROKKA {
     // in the README). It should contain the name that was passed in the input
     // and the GFF file that was created by Prokka when it finishes
 
-    // Hint: PROKKA creates a new directory inside this working directory. Inside
-    // of that directory is a file ending in .gff. The answer will use a combination
-    // of file(), **, and *.gff. Look up the usage of * and ** in bash.
+    // Hint: Make an output record including the following field:
+    // gff: file("**/*gff")
 
 
     script:

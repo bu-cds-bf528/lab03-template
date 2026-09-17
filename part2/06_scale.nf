@@ -11,7 +11,7 @@ include { EXTRACT_REGION } from '../modules/extract_region'
 
 workflow {
 
-    // TODO: replace Stage 2's channel.of(...) with a samplesheet-driven
+    // TODO: replace Stage 2's channel.fromPath(...) with a samplesheet-driven
     // channel — one AssemblyRequest record per row. See 05_scale_request.nf.
 
 

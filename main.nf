@@ -33,13 +33,10 @@ workflow {
     region_ch = EXTRACT_REGION(annot_ch)
     faidx_ch = SAMTOOLS_FAIDX(genome_ch)
 
-    // TODO: combine faidx_ch and region_ch into one channel that satisfies
-    // SAMTOOLS_FAIDX_SUBSET's IndexedGenomeRegion input (fna, fai, region —
-    // see modules/samtools_faidx_subset for the exact shape), then call
-    // SAMTOOLS_FAIDX_SUBSET on it. Nextflow's `.join(by: "name")` operator
-    // combines two channels on a shared field — see
-    // https://docs.seqera.io/nextflow/reference/operator#join
-    // See part2/09_join.nf for a view of just the joined channel on its own.
+    // TODO: Copy your working code from part2/09_join.nf for the join and save
+    // it to a variable
+
+    // TODO: Call the final process, SAMTOOLS_FAIDX_SUBSET on this joined channel
 
     publish:
     prokka_results = annot_ch

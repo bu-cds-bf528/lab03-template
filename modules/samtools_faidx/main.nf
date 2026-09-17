@@ -16,10 +16,7 @@ record IndexedGenome {
 process SAMTOOLS_FAIDX {
     conda "envs/samtools_env.yml"
 
-    // TODO: declare input: (a Genome record, named `sample` — see the
-    // script below) and output: (build an IndexedGenome record — see
-    // SPEC.md > Pipeline steps). `fna` is just passed through from the
-    // input; `fai` is produced by the command below.
+    // TODO: Fill in the input and output for this process
 
     // Hint: You can use the * in bash to capture any file ending in a certain
     // pattern. The index will end in ".fna"

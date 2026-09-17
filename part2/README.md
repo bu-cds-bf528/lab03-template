@@ -26,108 +26,7 @@ with a diagram showing exactly what's new. **Operate your pipeline** then
 covers operating and debugging the finished pipeline (stub vs. real runs,
 resource labels, `nextflow log`, linting, publishing results).
 
-## Key Concepts and Tools
-
-A quick index of everything this part introduces, and where to find it below.
-(Records and channel/DSL basics are covered in
-[Part 1](part1/README.md) instead.)
-
-**Building the pipeline, stage by stage** — see "Build the pipeline"
-- Stage 1 — one process, one sample (`part2/01_request.nf`,
-  `part2/02_download.nf`)
-- Stage 2 — a 3-process linear chain (`part2/03_prokka.nf`,
-  `part2/04_chain.nf`)
-- Stage 3 — scale to every sample in the samplesheet
-  (`part2/05_scale_request.nf`, `part2/06_scale.nf`)
-- Stage 4 — a second, independent branch (`part2/07_faidx.nf`,
-  `part2/08_branch.nf`)
-- Stage 5 — join both branches into the finished pipeline
-  (`part2/09_join.nf`, `main.nf`)
-
-**Modularization**
-- You can see that we no longer have processes in `main.nf`. Instead, they are
-  defined in their own directories under modules/. Each process gets a separate
-  .nf file that defines its inputs, outputs, and command.
-
-**Tools this pipeline runs**
-- `ncbi-datasets-cli` genome downloads — see "ncbi_datasets_cli"
-- Prokka genome annotation, GFF files — see "prokka"
-- `samtools faidx`, FASTA index (`.fai`), region coordinates (`chr:start-end`) —
-  see "Small aside - FASTA Indexes", "samtools_faidx", and
-  "samtools_faidx_subset"
-
-**Running and configuring the pipeline**
-- `stub` block, `-stub-run` flag — see "Stub runs (-stub-run)" and "Build the
-  pipeline"
-- `ext.args`, `task.ext.args ?: ''`, `withName:` process selector — see "Process
-  configuration: ext.args and withName"
-
-**Debugging**
-- `nextflow log`, `-f` fields, `-filter` expressions — see "Debugging with
-  nextflow log and the work directory"
-- `.command.sh`, `.command.err`, `.exitcode` in the work directory — see
-  "Debugging with nextflow log and the work directory"
-
-**Once your pipeline works** — quality-of-life features, not required for a
-working pipeline
-- `-with-report` — see "Process configuration: ext.args and withName"
-- `resume` in `nextflow.config` — see "Resume"
-- Process `label`s and resource requests in `nextflow.config` — see "Labels"
-- `nextflow lint` — see "Linting, formatting, and inspecting pipelines"
-- `results` directory, `publish:` block — see "Results - moving important files
-  outside of the work directory"
-
-## Small aside - FASTA format
-
-FASTA is a simple text format for representing nucleotide or protein sequences.
-Each record starts with a header line beginning with `>` containing an
-identifier and optional description, followed by one or more lines of sequence
-characters. For example:
-
-```
->NC_016845.1 Klebsiella pneumoniae subsp. pneumoniae chromosome
-ATGGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGC...
-```
-
-We'll only need to know this much for today's lab — we'll cover the FASTA format
-(and related formats like FASTQ) in much more detail later in the course.
-
-## Small aside - FASTA Indexes
-
-Though the genomes we are working with today are relatively small, it can still
-be cumbersome to work with such large sequences. For example, let's say we know
-that a specific region of the genome should correspond to a specific gene and we
-want to extract out just that sequence of gene. The most straightforward (and
-naive) method would be to read through the entire genome until we find that
-sequence.
-
-While this may finish quickly for smaller genomes, we can take advantage of the
-regular structure of files and create an index that allows us to more quickly
-retrieve sequences from a FASTA file by its coordinates. This index contains
-information about the length of the overall sequence, the position in the file
-where the sequence begins and the number of characters and bytes per line. This
-information together can allow us to extract a subsequence from the original by
-specifying it's coordinates or range. Importantly, this index prevents us from
-having to read the file beginning to end. You can think of this as being akin to
-a table of contents in a book.
-
-This idea can also be extended to the problem of aligning short sequences to a
-reference sequence. We will need to build a special index (data structure) that
-allows us to more efficiently find the best alignment of a short read in a much
-longer sequence. Every alignment algorithm will require you to first build an
-index that will enable the algorithm to efficiently and more quickly align
-reads. These indexes are unique to each tool and algorithm and are typically
-created using a different command provided by the software.
-
-Returning to FASTA indexes, by convention, these indexes are a new file with the
-.fai extension added directly to the end of the original name. Tools that
-utilize these indexes expect that the original FASTA and the .fai index are in
-the same location.
-
-To extract out a random sequence by its location, you will need the original
-FASTA, the index file, and the region you want the sequence of in the format of
-`chr_name:start_pos-end_pos` or `NC_016845.1:18065-20962`. We will extract out
-this region by looking at the GFF file of the genomes.
+This is the same pipeline you were exposed to before. 
 
 ## Setup
 
@@ -137,17 +36,9 @@ this region by looking at the GFF file of the genomes.
 
 ## Build the pipeline
 
-Read `specifications.md` first as it describes the whole pipeline (inputs,
-outputs, per-step dependencies, environments, resource requirements)
-independent of any code. Everything below assumes you've read it.
-
 Instead of writing `main.nf` all at once, you'll build the pipeline up as
 five stages. **Each stage's file is the previous stage's file plus exactly
-one new thing** — the wiring you already got working keeps working; you're
-only ever adding to it. Stages 1-4 each live as their own numbered scripts in
-`part2/` — same convention as `part1/` — so a stage that goes wrong never
-threatens one that already worked; Stage 5 *is* the repo's root `main.nf`,
-the real deliverable, the one file deliberately kept outside `part2/`.
+one new thing**
 
 Within `part2/`, the *new* thing being introduced usually gets its own small
 file first — just that one addition, ending in a `.view()` so you can see
@@ -171,207 +62,291 @@ module below already has a working `stub:` block given to you.
 
 You'll use `nextflow run <file> -stub-run` after every stage.
 
-### Stage 1 — One process, one sample
+### part2/01_request.nf
 
 ```mermaid
 flowchart LR
-    NCBI[NCBI_DATASETS_CLI]
+    subgraph AssemblyRequest["AssemblyRequest (GIVEN)"]
+        REQ_NAME["name: String"]
+        REQ_ASSEMBLY["assembly: String"]
+    end
+    AssemblyRequest --> CONSTRUCT["record(name: 'Klebsiella_pneumoniae', assembly: 'GCF_000240185.1')"]
+    CONSTRUCT --> NCBI["NCBI_DATASETS_CLI (TODO)"]
     classDef new fill:#f96,stroke:#333
     class NCBI new
 ```
 
-Stage 1 is fully given: one hardcoded sample in a `channel.of(...)`, fed
-straight into `NCBI_DATASETS_CLI`. Your only task is inside the module
-itself.
+**To Do**
 
-- `part2/01_request.nf` — just the starting channel, `request_ch`, viewed on
-  its own.
-- `part2/02_download.nf` — `request_ch` fed into `NCBI_DATASETS_CLI`, viewing
-  its output.
+1. Run `nextflow run part2/01_request.nf`
+2. View what gets printed to the terminal
 
-**You write:**
-- [ ] `modules/ncbi_datasets_cli` — declare the `AssemblyRequest` (input) and
-  `Genome` (output) `record` types at the top of the file. See
-  `specifications.md` for the field shapes. Once declared, the rest of the
-  process (input/output/script/stub) references them as-is.
+### part2/02_download.nf
 
-**Verify:**
+```mermaid
+flowchart LR
+    REQ["AssemblyRequest<br/>name: 'Klebsiella_pneumoniae'<br/>assembly: 'GCF_000240185.1'"] --> NCBI["NCBI_DATASETS_CLI (TODO)"]
+    NCBI --> GENOME["Genome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'"]
+    classDef new fill:#f96,stroke:#333
+    class NCBI,GENOME new
+```
+
+**What's Changed**
+
+All that's changed from last time is we have now passed the initial channel 
+we generated to the actual NCBI_DATASETS_CLI process. 
+
+**To Do**
+
+1. In `modules/ncbi_datasets_cli` — declare the `AssemblyRequest` (input) and
+  `Genome` (output) `record` types at the top of the file. I have defined for you
+  what should be contained within each.
+
+2. Run the following:
+
 ```bash
-nextflow run part2/01_request.nf
 nextflow run part2/02_download.nf -stub-run
 ```
-`01_request.nf` should print the hardcoded `AssemblyRequest` record.
+
 `02_download.nf` should run one `NCBI_DATASETS_CLI` process and print a
 `Genome` record (`name`, `fna`).
 
-### Stage 2 — Linear chain
+### part2/03_prokka.nf
 
 ```mermaid
 flowchart LR
-    NCBI[NCBI_DATASETS_CLI] -->|"Genome<br/>name: String<br/>fna: Path"| PROKKA[PROKKA]
-    PROKKA -->|"Annotation<br/>name: String<br/>gff: Path"| EXTRACT[EXTRACT_REGION]
+    GENOME["Genome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'"] --> PROKKA["PROKKA (TODO)"]
+    PROKKA --> ANNOT["Annotation<br/>name: 'Klebsiella_pneumoniae'<br/>gff: 'Klebsiella_pneumoniae/stub.gff'"]
     classDef new fill:#f96,stroke:#333
-    class PROKKA,EXTRACT new
+    class PROKKA,ANNOT new
 ```
 
-Stage 2 reuses Stage 1's `request_ch`/`NCBI_DATASETS_CLI` call exactly as
-given, then chains two more processes after it — your first taste of passing
-one process's output record straight into the next process's input, with no
-branching yet.
+**What's Changed**
+We have now taken the output of NCBI_DATASETS_CLI and we want to run another task
+using what was downloaded. 
 
-- `part2/03_prokka.nf` — Stage 1's chain, plus `PROKKA`, viewing just its
-  output (`annot_ch`).
-- `part2/04_chain.nf` — the above, plus `EXTRACT_REGION`, viewing its output
-  (`region_ch`).
+**To Do:**
+1. In `modules/prokka/main.nf`, make the `output` record containing the name from
+the original record and the file created by PROKKA (given in the code)
 
-**You write:**
-- [ ] `modules/prokka` — construct the `output:` record. The `Genome` and
-  `Annotation` record *declarations*, the input block, the script, and the
-  stub are all given. Build an `Annotation` record from `sample` (the input
-  `Genome` in scope) using the `record(...)` syntax (see
-  [Records and static typing](part1/README.md#records-and-static-typing)).
-  The GFF file Prokka produces is named after `sample.name` — look at the
-  script to see exactly where.
-- [ ] `modules/extract_region` — write the `script:` block. Records and the
-  input/output blocks are given. Call `extract_region.py` with the right
-  flags — look at its `argparse` block (`-i`/`--input`, `-o`/`--output`) to
-  see what it expects, and remember to make the script executable.
+2. Run the command: `nextflow run 03_prokka.nf -stub`
 
-**Verify:**
-```bash
-nextflow run part2/03_prokka.nf -stub-run
-nextflow run part2/04_chain.nf -stub-run
-```
 `03_prokka.nf` should run `NCBI_DATASETS_CLI` → `PROKKA` and print an
-`Annotation` record (`name`, `gff`). `04_chain.nf` should additionally run
-`EXTRACT_REGION` and print a `Region` record (`name`, `region`).
+`Annotation` record (`name`, `gff`). 
 
-### Stage 3 — Scale to the samplesheet
-
-Same 3-node chain as Stage 2 — nothing new in the diagram, only in how many
-records flow through it, so there's no new diagram for this stage. If you
-haven't already, run `part1/04_scale.nf` — this stage is that exact same
-`fromPath`/`splitCsv`/`map` pattern, applied to the real pipeline's
-`samplesheet.csv` instead of `part1/toy_samplesheet.csv`.
-
-Unlike Stages 1, 2, and 4, this stage's new piece isn't hidden inside a
-module — it's the channel construction itself, so it's your task in *both*
-files below (the second is just the first, wired into the rest of the
-chain):
-
-- `part2/05_scale_request.nf` — build `request_ch` from `samplesheet.csv` and
-  view it on its own.
-- `part2/06_scale.nf` — the same construction, feeding Stage 2's given chain.
-
-**You write:**
-- [ ] `part2/05_scale_request.nf` and `part2/06_scale.nf` — replace Stage 2's
-  hardcoded `channel.of(...)` with a samplesheet-driven channel:
-  `channel.fromPath(params.samplesheet)` → `.splitCsv(header: true)` →
-  `.map{ row -> record(name: row.name, assembly: row.assembly) }`. Everything
-  after that in `06_scale.nf` (the `NCBI_DATASETS_CLI` → `PROKKA` →
-  `EXTRACT_REGION` chain) is identical to Stage 2 — carry it over unchanged.
-
-**Verify:**
-```bash
-nextflow run part2/05_scale_request.nf
-nextflow run part2/06_scale.nf -stub-run
-```
-`05_scale_request.nf` should print one `AssemblyRequest` record per row of
-`samplesheet.csv`. `06_scale.nf` should then run each process once *per row*
-(both `Carsonella_ruddii` and `Klebsiella_pneumoniae`), not just once.
-
-### Stage 4 — A second, independent branch
+### part2/04_chain.nf
 
 ```mermaid
 flowchart LR
-    NCBI[NCBI_DATASETS_CLI] -->|Genome| PROKKA[PROKKA]
-    PROKKA -->|Annotation| EXTRACT[EXTRACT_REGION]
-    NCBI -->|Genome| FAIDX[SAMTOOLS_FAIDX]
+    PROKKA["PROKKA (GIVEN)"] --> ANNOT["Annotation<br/>name: 'Klebsiella_pneumoniae'<br/>gff: 'Klebsiella_pneumoniae/stub.gff'"]
+    ANNOT --> EXTRACT["EXTRACT_REGION (TODO: script)"]
+    EXTRACT --> REGION["Region<br/>name: 'Klebsiella_pneumoniae'<br/>region: 'Klebsiella_pneumoniae_region_of_interest.txt'"]
     classDef new fill:#f96,stroke:#333
-    class FAIDX new
+    class EXTRACT,REGION new
 ```
 
-Stage 4 carries Stage 3's chain over unchanged and adds a second process
-fed by the *same* `genome_ch` — the first time a single process's output
-feeds two independent downstream consumers. The two branches aren't combined
-yet; you'll just see both run and print separately. If you haven't already,
-`part1/05_parallel.nf` rehearses this exact shape with toy processes first.
+**What's Changed**
 
-- `part2/07_faidx.nf` — Stage 3's `genome_ch`, plus `SAMTOOLS_FAIDX`, viewing
-  just its own output (`faidx_ch`) — the annotation branch isn't included
-  here.
-- `part2/08_branch.nf` — the full Stage 3 chain *and* the new branch
-  together, viewing both.
+We are adding a new process that now takes the output we just generated from PROKKA.
 
-**You write:**
-- [ ] `modules/samtools_faidx` — declare the `input:`/`output:` block. The
-  script (a `shell:` block using `samtools faidx ${sample.fna}`) and the stub
-  are given — that script tells you the input parameter must be named
-  `sample`. Declare `sample` as a `Genome`, and construct the
-  `IndexedGenome` output record: `fna` is just passed through from the
-  input; `fai` is produced by the command.
-
-**Verify:**
-```bash
-nextflow run part2/07_faidx.nf -stub-run
-nextflow run part2/08_branch.nf -stub-run
-```
-`07_faidx.nf` should run `NCBI_DATASETS_CLI` → `SAMTOOLS_FAIDX` and print an
-`IndexedGenome` record. `08_branch.nf` should print both the annotation
-branch (`EXTRACT_REGION`'s `Region` records) and the faidx branch
-(`SAMTOOLS_FAIDX`'s `IndexedGenome` records), for both samples,
-independently of each other.
-
-### Stage 5 — Join, the finished pipeline
+### part2/05_scale_request.nf
 
 ```mermaid
 flowchart LR
-    NCBI[NCBI_DATASETS_CLI] -->|Genome| PROKKA[PROKKA]
-    PROKKA -->|Annotation| EXTRACT[EXTRACT_REGION]
-    NCBI -->|Genome| FAIDX[SAMTOOLS_FAIDX]
-    EXTRACT -->|"Region<br/>name: String<br/>region: Path"| MERGED(["IndexedGenomeRegion<br/>name: String<br/>fna: Path<br/>fai: Path<br/>region: Path"])
-    FAIDX -->|"IndexedGenome<br/>name: String<br/>fna: Path<br/>fai: Path"| MERGED
-    MERGED --> SUBSET[SAMTOOLS_FAIDX_SUBSET]
+    CSV[/samplesheet.csv/] -->|"fromPath → splitCsv → map (TODO)"| ROW1
+    CSV -->|"fromPath → splitCsv → map (TODO)"| ROW2
+
+    ROW1["AssemblyRequest<br/>name: 'Carsonella_ruddii'<br/>assembly: 'GCF_000287275.1'"]
+    ROW2["AssemblyRequest<br/>name: 'Klebsiella_pneumoniae'<br/>assembly: 'GCF_000240185.1'"]
+
     classDef new fill:#f96,stroke:#333
-    class SUBSET,MERGED new
-    linkStyle 3,4,5 stroke:#f96,stroke-width:2px
+    class CSV,ROW1,ROW2 new
 ```
 
-This is the repo's root `main.nf` — the real deliverable, the one file kept
-outside `part2/`. It carries Stage 4's two branches over unchanged; the
-only remaining task is combining them. If you haven't already,
-`part1/06_join.nf` rehearses this exact `.join(by: ...)` shape with toy
-processes first.
+**What's Changed**
 
-- `part2/09_join.nf` — Stage 4's two branches, plus the join, viewing just
-  the combined channel (`subset_ch`) — `SAMTOOLS_FAIDX_SUBSET` isn't called
-  here, so you can check the joined record's shape before wiring the process
-  call into `main.nf`.
-- `main.nf` — everything, including the call to `SAMTOOLS_FAIDX_SUBSET`.
+Instead of hard-coding values in our scripts, we often want to encode this
+information in a structured file (CSV) that will allow us to pass multiple
+samples to our pipeline. This also makes it convenient if we ever need to add
+or remove samples. 
 
-`modules/samtools_faidx_subset` is given, complete — read it first. Its
-input, `IndexedGenomeRegion`, doesn't come from a single upstream process;
-it's the result of combining `SAMTOOLS_FAIDX`'s `IndexedGenome` (`fna`,
-`fai`) with `EXTRACT_REGION`'s `Region` (`region`) — both keyed by `name`.
+**To Do**
+1. Use `map`, `channel.fromPath`, and `splitCsv()` to view a channel that holds
+the information from the samplesheet provided. 
 
-**You write:**
-- [ ] `part2/09_join.nf` and `main.nf` — combine `faidx_ch` and `region_ch`
-  into one channel that satisfies `SAMTOOLS_FAIDX_SUBSET`'s
-  `IndexedGenomeRegion` input. Nextflow's
-  [`.join(by: "name")`](https://docs.seqera.io/nextflow/reference/operator#join)
-  operator combines two channels on a shared field — that's what you need
-  here. `main.nf` additionally calls `SAMTOOLS_FAIDX_SUBSET` on the result.
+2. Run the command: `nextflow run part2/05_scale_request.nf`
 
-**Verify:**
-```bash
-nextflow run part2/09_join.nf -stub-run
-nextflow run main.nf -stub-run
+`part2/05_scale_request.nf` should run and print out two lines to your terminal
+containing the fields from the CSV as a nextflow record.
+
+### part2/06_scale.nf
+
+```mermaid
+flowchart LR
+    CSV[/samplesheet.csv/] -->|"fromPath → splitCsv → map (TODO)"| ROW1
+    CSV -->|"fromPath → splitCsv → map (TODO)"| ROW2
+
+    subgraph ROW_1["row 1: same chain, own copy of the data"]
+        direction LR
+        ROW1["AssemblyRequest<br/>name: 'Carsonella_ruddii'<br/>assembly: 'GCF_000287275.1'"] --> NCBI1["NCBI_DATASETS_CLI"] --> G1["Genome<br/>name: 'Carsonella_ruddii'<br/>fna: 'dataset/stub/Carsonella_ruddii.fna'"] --> PROKKA1["PROKKA"] --> A1["Annotation<br/>name: 'Carsonella_ruddii'<br/>gff: 'Carsonella_ruddii/stub.gff'"] --> EXTRACT1["EXTRACT_REGION"] --> R1["Region<br/>name: 'Carsonella_ruddii'<br/>region: 'Carsonella_ruddii_region_of_interest.txt'"]
+    end
+
+    subgraph ROW_2["row 2: same chain, own copy of the data"]
+        direction LR
+        ROW2["AssemblyRequest<br/>name: 'Klebsiella_pneumoniae'<br/>assembly: 'GCF_000240185.1'"] --> NCBI2["NCBI_DATASETS_CLI"] --> G2["Genome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'"] --> PROKKA2["PROKKA"] --> A2["Annotation<br/>name: 'Klebsiella_pneumoniae'<br/>gff: 'Klebsiella_pneumoniae/stub.gff'"] --> EXTRACT2["EXTRACT_REGION"] --> R2["Region<br/>name: 'Klebsiella_pneumoniae'<br/>region: 'Klebsiella_pneumoniae_region_of_interest.txt'"]
+    end
+
+    classDef new fill:#f96,stroke:#333
+    class CSV,ROW1,ROW2 new
 ```
-`09_join.nf` should print an `IndexedGenomeRegion` record (`name`, `fna`,
-`fai`, `region`) for each sample. `main.nf` should then run the full
-pipeline end-to-end for both samples, producing a `Subset` record (`name`,
-`subset_fna`) for each — this is the "Stub-run milestone" from
-`specifications.md`.
+
+**What's Changed**
+
+`NCBI_DATASETS_CLI` → `PROKKA` → `EXTRACT_REGION` is exactly the series of processes
+from before. The only new piece is `request_ch` which you already generated.
+Now because `request_ch` holds two elements (the two rows of data in our CSV),
+this series of processes will happen in parallel for each.
+
+**To Do**
+
+1. Copy your working code from `part2/05_scale_request.nf` to the beginning of
+your workflow in `part2/06_scale.nf`. 
+
+2. Run the command: `nextflow run part2/06_scale.nf -stub`
+
+### part2/07_faidx.nf
+
+```mermaid
+flowchart LR
+    GENOME["Genome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'"]
+    GENOME -.->|"annotation branch (not run in 07_faidx.nf)"| PROKKA["PROKKA (GIVEN)"]
+    PROKKA -.-> ANNOT[Annotation]
+    ANNOT -.-> EXTRACT[EXTRACT_REGION]
+    EXTRACT -.-> REGION[Region]
+    GENOME --> FAIDX["SAMTOOLS_FAIDX (TODO)"]
+    FAIDX --> IDX["IndexedGenome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'<br/>fai: 'Klebsiella_pneumoniae.stub.fai'"]
+    classDef new fill:#f96,stroke:#333
+    class FAIDX,IDX new
+```
+
+**What's Changed**
+We are adding a process that also uses the `genome_ch` we generated earlier. This
+process can run in parallel directly after the `NCBI_DATASETS_CLI` process finishes
+because it only requires the outputs from that process. 
+
+**To Do**
+1. Fill in and complete the `input` and `output` in `part2/07_faidx.nf`
+2. Run the command: `nextflow run part2/07_faidx.nf -stub` and observe what gets printed
+to your terminal.
+
+### part2/08_branch.nf
+
+```mermaid
+flowchart LR
+    GENOME["Genome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'"]
+
+    GENOME --> PROKKA[PROKKA]
+    PROKKA --> ANNOT["Annotation<br/>name: 'Klebsiella_pneumoniae'<br/>gff: 'Klebsiella_pneumoniae/stub.gff'"]
+    ANNOT --> EXTRACT[EXTRACT_REGION]
+    EXTRACT --> REGION["Region<br/>name: 'Klebsiella_pneumoniae'<br/>region: 'Klebsiella_pneumoniae_region_of_interest.txt'"]
+
+    GENOME --> FAIDX[SAMTOOLS_FAIDX]
+    FAIDX --> IDX["IndexedGenome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'<br/>fai: 'Klebsiella_pneumoniae.stub.fai'"]
+```
+
+**What's Changed**
+
+Nothing new to write, this file just shows you that both will run and you can 
+observe the outputs.
+
+**To Do**
+1. Run the command: `nextflow run part2/08_branch.nf -stub` and observe
+that both branches print, independently, for each sample.
+
+### part2/09_join.nf
+
+```mermaid
+flowchart LR
+    REGION["Region<br/>name: 'Klebsiella_pneumoniae'<br/>region: 'Klebsiella_pneumoniae_region_of_interest.txt'"] --> MERGED
+    IDX["IndexedGenome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'<br/>fai: 'Klebsiella_pneumoniae.stub.fai'"] --> MERGED
+    MERGED(["IndexedGenomeRegion (TODO: join)<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'<br/>fai: 'Klebsiella_pneumoniae.stub.fai'<br/>region: 'Klebsiella_pneumoniae_region_of_interest.txt'"])
+    classDef new fill:#f96,stroke:#333
+    class MERGED new
+```
+
+**What's Changed**
+This pipeline is nearly complete but we now need to generate a record that per
+sample combines the output from the `EXTRACT_REGIONS` process and the `SAMTOOLS_FAIDX`
+process. 
+
+**To Do**
+1. In `part2/09_join.nf`, use the join operator to create a channel with records
+that have all the fields needed for the final process, `SAMTOOLS_FAIDX_SUBSET`.
+2. Run the command: `nextflow run part2/09_join.nf -stub` and observe what get's printed
+
+
+`part2/09_join.nf` should print an `IndexedGenomeRegion` record (`name`, `fna`,
+`fai`, `region`) for each sample. `
+
+
+### main.nf
+
+```mermaid
+flowchart LR
+    MERGED(["IndexedGenomeRegion (GIVEN)<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'<br/>fai: 'Klebsiella_pneumoniae.stub.fai'<br/>region: 'Klebsiella_pneumoniae_region_of_interest.txt'"]) --> SUBSET["SAMTOOLS_FAIDX_SUBSET (TODO)"]
+    SUBSET --> RESULT["Subset<br/>name: 'Klebsiella_pneumoniae'<br/>subset_fna: 'Klebsiella_pneumoniae_region.subset.fna'"]
+    classDef new fill:#f96,stroke:#333
+    class SUBSET,RESULT new
+```
+
+**What's Changed**
+We have now built the entire pipeline and have joined two records from separate
+processes together so that we may perform the final step, which requires the
+output from both `EXTRACT_REGION` and `SAMTOOLS_FAIDX`. 
+
+**To Do**
+
+1. In `main.nf`, copy and paste your working code that joins the outputs together
+from `part2/09_join.nf`.
+2. In the `workflow`, call the final process on the joined channel.
+3. Run the command: `nextflow run main.nf -stub`
+
+### The entire pipeline
+
+Now that every piece is written, here's the whole pipeline again, but
+exploded out per sample — each row of `samplesheet.csv` gets its own,
+independent copy of every record and process, from the initial request all
+the way to the final `Subset`.
+
+```mermaid
+flowchart LR
+    CSV[/samplesheet.csv/] --> ROW1_REQ
+    CSV --> ROW2_REQ
+
+    subgraph ROW_1["row 1: Carsonella_ruddii"]
+        direction LR
+        ROW1_REQ["AssemblyRequest<br/>name: 'Carsonella_ruddii'<br/>assembly: 'GCF_000287275.1'"] --> ROW1_NCBI[NCBI_DATASETS_CLI]
+        ROW1_NCBI --> ROW1_GENOME["Genome<br/>name: 'Carsonella_ruddii'<br/>fna: 'dataset/stub/Carsonella_ruddii.fna'"]
+        ROW1_GENOME --> ROW1_PROKKA[PROKKA] --> ROW1_ANNOT["Annotation<br/>name: 'Carsonella_ruddii'<br/>gff: 'Carsonella_ruddii/stub.gff'"] --> ROW1_EXTRACT[EXTRACT_REGION] --> ROW1_REGION["Region<br/>name: 'Carsonella_ruddii'<br/>region: 'Carsonella_ruddii_region_of_interest.txt'"]
+        ROW1_GENOME --> ROW1_FAIDX[SAMTOOLS_FAIDX] --> ROW1_IDX["IndexedGenome<br/>name: 'Carsonella_ruddii'<br/>fna: 'dataset/stub/Carsonella_ruddii.fna'<br/>fai: 'Carsonella_ruddii.stub.fai'"]
+        ROW1_REGION --> ROW1_MERGED
+        ROW1_IDX --> ROW1_MERGED
+        ROW1_MERGED(["IndexedGenomeRegion<br/>name: 'Carsonella_ruddii'<br/>fna: 'dataset/stub/Carsonella_ruddii.fna'<br/>fai: 'Carsonella_ruddii.stub.fai'<br/>region: 'Carsonella_ruddii_region_of_interest.txt'"]) --> ROW1_SUBSET[SAMTOOLS_FAIDX_SUBSET]
+        ROW1_SUBSET --> ROW1_RESULT["Subset<br/>name: 'Carsonella_ruddii'<br/>subset_fna: 'Carsonella_ruddii_region.subset.fna'"]
+    end
+
+    subgraph ROW_2["row 2: Klebsiella_pneumoniae"]
+        direction LR
+        ROW2_REQ["AssemblyRequest<br/>name: 'Klebsiella_pneumoniae'<br/>assembly: 'GCF_000240185.1'"] --> ROW2_NCBI[NCBI_DATASETS_CLI]
+        ROW2_NCBI --> ROW2_GENOME["Genome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'"]
+        ROW2_GENOME --> ROW2_PROKKA[PROKKA] --> ROW2_ANNOT["Annotation<br/>name: 'Klebsiella_pneumoniae'<br/>gff: 'Klebsiella_pneumoniae/stub.gff'"] --> ROW2_EXTRACT[EXTRACT_REGION] --> ROW2_REGION["Region<br/>name: 'Klebsiella_pneumoniae'<br/>region: 'Klebsiella_pneumoniae_region_of_interest.txt'"]
+        ROW2_GENOME --> ROW2_FAIDX[SAMTOOLS_FAIDX] --> ROW2_IDX["IndexedGenome<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'<br/>fai: 'Klebsiella_pneumoniae.stub.fai'"]
+        ROW2_REGION --> ROW2_MERGED
+        ROW2_IDX --> ROW2_MERGED
+        ROW2_MERGED(["IndexedGenomeRegion<br/>name: 'Klebsiella_pneumoniae'<br/>fna: 'dataset/stub/Klebsiella_pneumoniae.fna'<br/>fai: 'Klebsiella_pneumoniae.stub.fai'<br/>region: 'Klebsiella_pneumoniae_region_of_interest.txt'"]) --> ROW2_SUBSET[SAMTOOLS_FAIDX_SUBSET]
+        ROW2_SUBSET --> ROW2_RESULT["Subset<br/>name: 'Klebsiella_pneumoniae'<br/>subset_fna: 'Klebsiella_pneumoniae_region.subset.fna'"]
+    end
+```
 
 ## Operate your pipeline
 
@@ -654,6 +629,95 @@ variables to the `results/` directory. This will enable you to more easily find
 or inspect important outputs from your processes. Please note that for every
 variable declared under `publish:`, you must have declare it also in the
 `output` block or nextflow will throw an error.
+
+## Small aside - FASTA format
+
+FASTA is a simple text format for representing nucleotide or protein sequences.
+Each record starts with a header line beginning with `>` containing an
+identifier and optional description, followed by one or more lines of sequence
+characters. For example:
+
+```
+>NC_016845.1 Klebsiella pneumoniae subsp. pneumoniae chromosome
+ATGGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGC...
+```
+
+We'll only need to know this much for today's lab — we'll cover the FASTA format
+(and related formats like FASTQ) in much more detail later in the course.
+
+## Small aside - FASTA Indexes
+
+Though the genomes we are working with today are relatively small, it can still
+be cumbersome to work with such large sequences. For example, let's say we know
+that a specific region of the genome should correspond to a specific gene and we
+want to extract out just that sequence of gene. The most straightforward (and
+naive) method would be to read through the entire genome until we find that
+sequence.
+
+While this may finish quickly for smaller genomes, we can take advantage of the
+regular structure of files and create an index that allows us to more quickly
+retrieve sequences from a FASTA file by its coordinates. This index contains
+information about the length of the overall sequence, the position in the file
+where the sequence begins and the number of characters and bytes per line. This
+information together can allow us to extract a subsequence from the original by
+specifying it's coordinates or range. Importantly, this index prevents us from
+having to read the file beginning to end. You can think of this as being akin to
+a table of contents in a book.
+
+This idea can also be extended to the problem of aligning short sequences to a
+reference sequence. We will need to build a special index (data structure) that
+allows us to more efficiently find the best alignment of a short read in a much
+longer sequence. Every alignment algorithm will require you to first build an
+index that will enable the algorithm to efficiently and more quickly align
+reads. These indexes are unique to each tool and algorithm and are typically
+created using a different command provided by the software.
+
+Returning to FASTA indexes, by convention, these indexes are a new file with the
+.fai extension added directly to the end of the original name. Tools that
+utilize these indexes expect that the original FASTA and the .fai index are in
+the same location.
+
+To extract out a random sequence by its location, you will need the original
+FASTA, the index file, and the region you want the sequence of in the format of
+`chr_name:start_pos-end_pos` or `NC_016845.1:18065-20962`. We will extract out
+this region by looking at the GFF file of the genomes.
+
+
+## Key Concepts and Tools
+
+**Modularization**
+- You can see that we no longer have processes in `main.nf`. Instead, they are
+  defined in their own directories under modules/. Each process gets a separate
+  .nf file that defines its inputs, outputs, and command.
+
+**Tools this pipeline runs**
+- `ncbi-datasets-cli` genome downloads — see "ncbi_datasets_cli"
+- Prokka genome annotation, GFF files — see "prokka"
+- `samtools faidx`, FASTA index (`.fai`), region coordinates (`chr:start-end`) —
+  see "Small aside - FASTA Indexes", "samtools_faidx", and
+  "samtools_faidx_subset"
+
+**Running and configuring the pipeline**
+- `stub` block, `-stub-run` flag — see "Stub runs (-stub-run)" and "Build the
+  pipeline"
+- `ext.args`, `task.ext.args ?: ''`, `withName:` process selector — see "Process
+  configuration: ext.args and withName"
+
+**Debugging**
+- `nextflow log`, `-f` fields, `-filter` expressions — see "Debugging with
+  nextflow log and the work directory"
+- `.command.sh`, `.command.err`, `.exitcode` in the work directory — see
+  "Debugging with nextflow log and the work directory"
+
+**Once your pipeline works** — quality-of-life features, not required for a
+working pipeline
+- `-with-report` — see "Process configuration: ext.args and withName"
+- `resume` in `nextflow.config` — see "Resume"
+- Process `label`s and resource requests in `nextflow.config` — see "Labels"
+- `nextflow lint` — see "Linting, formatting, and inspecting pipelines"
+- `results` directory, `publish:` block — see "Results - moving important files
+  outside of the work directory"
+
 
 ---
 

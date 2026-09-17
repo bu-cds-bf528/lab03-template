@@ -22,10 +22,9 @@ workflow {
     faidx_ch = SAMTOOLS_FAIDX(genome_ch)
 
     // TODO: combine faidx_ch and region_ch into one channel keyed by name.
-    // Nextflow's .join(by: "name") operator combines two channels on a
-    // shared field — see
     // https://docs.seqera.io/nextflow/reference/operator#join
 
+    // TODO: Save the joined channels into `subset_ch` and observe it's contents
 
     subset_ch.view()
 

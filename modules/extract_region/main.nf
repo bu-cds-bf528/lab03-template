@@ -26,11 +26,14 @@ process EXTRACT_REGION {
     )
 
     script:
-    // TODO: call extract_region.py with the right flags. Look at its
-    // argparse block (-i/--input, -o/--output) to see what it expects, and
-    // use ${sample.gff} as the input. Remember to make the script executable.
-    """
+    // TODO: Make the script executable (chmod +x bin/extract_region.py)
+    // Fill in the values after the -i and -o flags (By convention, -i  is the flag
+    // used to pass the input to a script, and -o is the flag for passing how you
+    // want the output file named
 
+    // Use the values from the input record
+    """
+    extract_region.py -i -o 
     """
 
     stub:
