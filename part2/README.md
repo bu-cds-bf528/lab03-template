@@ -327,7 +327,7 @@ output from both `EXTRACT_REGION` and `SAMTOOLS_FAIDX`.
 1. In `main.nf`, copy and paste your working code that joins the outputs together
 from `part2/09_join.nf`.
 
-2. In the `workflow`, call the final process on the joined channel.
+2. In the `workflow`, call the `SAMTOOLS_FAIDX_SUBSET` process on the joined channel.
 
 3. Run the command: `nextflow run main.nf -stub`
 
