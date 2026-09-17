@@ -1,10 +1,14 @@
 #!/usr/bin/env nextflow
 
-include {NCBI_DATASETS_CLI} from './modules/ncbi_datasets_cli'
-include {PROKKA} from './modules/prokka'
-include {EXTRACT_REGION} from './modules/extract_region'
-include {SAMTOOLS_FAIDX} from './modules/samtools_faidx'
-include {SAMTOOLS_FAIDX_SUBSET} from './modules/samtools_faidx_subset'
+// Stage 5: the finished pipeline. Everything below the two GIVEN blocks is
+// identical to Stage 4 — the only new task is combining the two independent
+// branches (annot_ch/region_ch and faidx_ch) into SAMTOOLS_FAIDX_SUBSET.
+
+include { NCBI_DATASETS_CLI } from './modules/ncbi_datasets_cli'
+include { PROKKA } from './modules/prokka'
+include { EXTRACT_REGION } from './modules/extract_region'
+include { SAMTOOLS_FAIDX } from './modules/samtools_faidx'
+include { SAMTOOLS_FAIDX_SUBSET } from './modules/samtools_faidx_subset'
 
 
 workflow {
@@ -14,23 +18,28 @@ workflow {
     // splitCsv is an operator (https://docs.seqera.io/nextflow/reference/operator#splitcsv)
 
     // map is an operator that applies a function to each item from a channel
-    // in this case, we are converting each row of the CSV into a record with 
+    // in this case, we are converting each row of the CSV into a record with
     // the elements found in the file
     main:
     download_ch = channel.fromPath(params.samplesheet)
     .splitCsv(header: true)
     .map{ row -> record(name: row.name, assembly: row.assembly)}
 
-    // TODO: wire up NCBI_DATASETS_CLI, PROKKA, EXTRACT_REGION,
-    // SAMTOOLS_FAIDX, and SAMTOOLS_FAIDX_SUBSET per SPEC.md > Pipeline steps.
+    // GIVEN: identical to Stage 4 — call each process, save its output to a
+    // named channel, and pass that channel to the next process per
+    // specifications.md > Pipeline steps.
+    genome_ch = NCBI_DATASETS_CLI(download_ch)
+    annot_ch = PROKKA(genome_ch)
+    region_ch = EXTRACT_REGION(annot_ch)
+    faidx_ch = SAMTOOLS_FAIDX(genome_ch)
 
-    // TODO: Ensure you save the PROKKA outputs to `annot_ch`
-    // TODO: Ensure you save the EXTRACT_REGION outputs to `region_ch`
-    // TODO: Ensure you save the SAMTOOLS_FAIDX outputs to `faidx_ch`
-
-    // GIVEN: We will talk in more detail later about what this is doing
-    subset_ch = faidx_ch.join(region_ch, by: "name")
-    faidx_out_ch = SAMTOOLS_FAIDX_SUBSET(subset_ch)
+    // TODO: combine faidx_ch and region_ch into one channel that satisfies
+    // SAMTOOLS_FAIDX_SUBSET's IndexedGenomeRegion input (fna, fai, region —
+    // see modules/samtools_faidx_subset for the exact shape), then call
+    // SAMTOOLS_FAIDX_SUBSET on it. Nextflow's `.join(by: "name")` operator
+    // combines two channels on a shared field — see
+    // https://docs.seqera.io/nextflow/reference/operator#join
+    // See part2/09_join.nf for a view of just the joined channel on its own.
 
     publish:
     prokka_results = annot_ch
@@ -39,6 +48,6 @@ workflow {
 
 output {
     prokka_results {
-        
+
     }
 }
