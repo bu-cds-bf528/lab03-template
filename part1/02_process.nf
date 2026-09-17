@@ -15,6 +15,8 @@ process STEP_ONE {
 
     // TODO: declare this process's input (a Sample record, named `sample`
     // — see the script below) and output. 
+    input:
+
     
 
     // TODO: Declare an output record that contains both the name and the newly
@@ -27,6 +29,7 @@ process STEP_ONE {
     //  )
     // in the record, include `name: sample.name` (look at the record at the top)
     // Also include the new file created, `log: file("${sample.name}.log")
+    output:
     
 
 
