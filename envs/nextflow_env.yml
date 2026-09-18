@@ -1,7 +1,0 @@
-name: nextflow_latest
-channels:
-- conda-forge
-- bioconda
-
-dependencies:
-- nextflow
